@@ -3,20 +3,44 @@
   <head>
     <meta charset="utf-8">
     <link href="styles/style2.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com"> 
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> 
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@700&display=swap" rel="stylesheet">
+    <script type="text/javascript">
+      function getCursorPosition(event) {
+	      var xPos = event.clientX
+	      var yPos = event.clientY
+	      document.getElementById("display").innerHTML = `x:${xPos} y:${yPos}`;
+	      document.getElementById("xbar").style.left = (xPos - 5) + 'px';
+	      document.getElementById("ybar").style.top = (yPos - 5) + 'px';
+	    }
+    </script>
   </head>
-  <body>
+  <body onmousemove="getCursorPosition(event)">
+
     <div class="background"></div>
     <div class="diagonal-overlay"></div>
+    <div id="xbar"></div>
+    <div id="ybar"></div>
+
     <div class="page-container">
-      <div class="name"><h1>Work in Progress</h1></div>
-      <div class="menu-container">
-	<ul>
-	  <li><a href="#">one</a></li>
-	  <li><a href="#">two</a></li>
-	  <li><a href="#">three</a></li>
-	  <li><a href="#">four</a></li>
-	  <li><a href="#">five</a></li>
-	</ul>
+      <header>
+	<div class="monogram">ln</div>
+      </header>
+      <div class="main">
+	<div class="name">
+	  <h1>Lucas Nieuwenhout</h1>
+	  <h2 id="display">x: y:</h2>
+	</div>
+	<nav class="menu-container">
+	  <ul>
+	    <li><a href="#">one</a></li>
+	    <li><a href="#">two</a></li>
+	    <li><a href="#">three</a></li>
+	    <li><a href="#">four</a></li>
+	    <li><a href="#">five</a></li>
+	  </ul>
+	</nav>
       </div>
     </div>
   </body>
