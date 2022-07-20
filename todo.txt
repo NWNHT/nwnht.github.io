@@ -1,0 +1,6 @@
+Todo:
+- Make the images actually centered
+- Fix the link of the monogram?
+- Make the home page top link move properly
+
+- Actually sort out the colours
