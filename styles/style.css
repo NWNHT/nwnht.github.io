@@ -26,6 +26,12 @@
   margin: 0;
 }
 
+.name > p, h1, h2, h3, h4
+{
+  font-family: "Open Sans", Arial;
+  margin: 0 0 0 2rem;
+}
+
 /* || Menu */
 
 .menu-container

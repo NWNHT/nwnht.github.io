@@ -1,4 +1,4 @@
-/* The page adjusts to mobile at a width of less than 480px */
+/* The page adjusts to mobile at a width of less than 600px */
 :root
 {
   --light-background: #F3FCF8;
@@ -63,10 +63,10 @@ header
 { /* This contains the monogram, min-height controls how close the rest of the content gets to it. */
   margin: 0;
   padding: 0;
-  min-height: 8rem;
+  min-height: 9rem;
 }
 
-.monogram
+a.monogram
 { /* Monogram is fixed in place, tried to center the text but not great so far,
   also includes a margin to the page edge that should match the left text. */
 position: fixed;
@@ -79,6 +79,7 @@ font-size: 3rem;
 margin: 2rem 2rem 2rem 2rem;
 height: 60px;
 width: 60px;
+text-decoration: none;
 }
 
 .monogram p
@@ -86,9 +87,11 @@ width: 60px;
   margin: 0;
   font-size: 48px;
   font-weight: 700;
+  color: var(--text);
 }
 
 .content {
+  box-sizing: border-box;
   width: 100%;
   max-width: 700px;
   margin: 0 auto;
@@ -97,7 +100,7 @@ width: 60px;
 
 /* || Text Formatting */
 
-.content > p, h1, h2, h3, h4, ol, ul, li
+p, h1, h2, h3, h4, ol, ul, li
 {
   margin-left: 2rem; margin-right: 2rem;
 }
@@ -107,28 +110,28 @@ p
   font-weight: 500;
 }
 
-.content > h1, h2, h3, h4
+h1, h2, h3, h4
 {
   font-family: 'Merriweather', serif;
   font-weight: 400;
 }
 
-.content > h1
+h1
 {
   font-size: 3rem;
 }
 
-.content > h2
+h2
 {
   font-size: 2rem;
 }
 
-.content > h3
+h3
 {
   font-size: 1.5rem;
 }
 
-.content > h4
+h4
 {
   font-size: 1.25rem;
 }
@@ -173,7 +176,7 @@ figcaption
 @media (min-width: 600px) {
   img
   {
-    max-width: 90%;
+    max-width: 92%;
     margin-left: 2rem;
     margin-right; 2rem;
   }
