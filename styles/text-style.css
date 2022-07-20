@@ -1,0 +1,180 @@
+/* The page adjusts to mobile at a width of less than 480px */
+:root
+{
+  --light-background: #F3FCF8;
+  /*--medium-background: #264653;*/
+  --medium-background: rgb(38,70,83,0.8);
+  --dark-background: #303036;
+  --accent: #fc5130;
+  --text: #FF3006;
+  --mobile-width: 900px;
+  --text-size: 16px;
+
+  --link-fresh: #FD795E;
+  --link-visited: #DD2803;
+  --link-hover: #FD9A86;
+}
+
+html
+{
+  font-size: 3vw;
+}
+
+@media (min-width: 600px)
+{
+  html
+  {
+    font-size: var(--text-size);
+  }
+}
+
+body
+{
+  margin: 0;
+  padding: 0;
+  font-family: 'Open Sans', Arial;
+  color: var(--text);
+  font-size: var(--text-size);
+}
+
+
+/* || Static Background and Monogram */
+
+.background
+{
+  position: fixed;
+  width: 100%;
+  height: 100vh;
+  background: var(--dark-background);
+  z-index: -5;
+}
+
+.diagonal-overlay
+{
+  position: fixed;
+  width: 100%;
+  height: 100vh;
+  background: linear-gradient(135deg, var(--medium-background) 0% 40%, transparent 40% 100%);
+  z-index: -2;
+  background-attachment: scroll;
+}
+
+header
+{ /* This contains the monogram, min-height controls how close the rest of the content gets to it. */
+  margin: 0;
+  padding: 0;
+  min-height: 8rem;
+}
+
+.monogram
+{ /* Monogram is fixed in place, tried to center the text but not great so far,
+  also includes a margin to the page edge that should match the left text. */
+position: fixed;
+display: flex;
+align-items: center;
+justify-items: center;
+padding: 0.5rem;
+background-color: var(--dark-background);
+font-size: 3rem;
+margin: 2rem 2rem 2rem 2rem;
+height: 60px;
+width: 60px;
+}
+
+.monogram p
+{
+  margin: 0;
+  font-size: 48px;
+  font-weight: 700;
+}
+
+.content {
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+
+/* || Text Formatting */
+
+.content > p, h1, h2, h3, h4, ol, ul, li
+{
+  margin-left: 2rem; margin-right: 2rem;
+}
+
+p
+{
+  font-weight: 500;
+}
+
+.content > h1, h2, h3, h4
+{
+  font-family: 'Merriweather', serif;
+  font-weight: 400;
+}
+
+.content > h1
+{
+  font-size: 3rem;
+}
+
+.content > h2
+{
+  font-size: 2rem;
+}
+
+.content > h3
+{
+  font-size: 1.5rem;
+}
+
+.content > h4
+{
+  font-size: 1.25rem;
+}
+
+
+/* || Link Formatting */
+
+.content a
+{
+  color: var(--link-fresh);
+}
+
+.content a:hover
+{
+  color: var(--link-hover);
+}
+
+.content a:visited
+{
+  color: var(--link-visited);
+}
+
+
+/* || Image and Figure Formatting */
+
+img
+{
+  max-width: 100%;
+}
+
+figure 
+{
+  margin: 0;
+}
+
+figcaption
+{
+  margin-left: 4rem;
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 600px) {
+  img
+  {
+    max-width: 90%;
+    margin-left: 2rem;
+    margin-right; 2rem;
+  }
+}

@@ -1,0 +1,97 @@
+/*
+@keyframes example {
+  from {background: blue;}
+  to {background: red;}
+}
+*/
+html {
+  font-family: 'Open Sans', sans-serif;
+  color: #2f3e46;
+  background: none;
+  height: 100%;
+  margin: 0;
+  /*background: linear-gradient(135deg, #84a98c 0% 10%, #f4f1de 10% 40%, white 40% 100%);
+  background-repeat: no-repeat;*/
+}
+
+img {
+  object-fit: cover;
+  max-width: 100%;
+  position: fixed;
+  z-index: -10;
+  opacity: 0.5;
+}
+
+img.img1 {
+  opacity = 0.1;
+}
+
+img.img2 {
+  opacity = 0.1;
+  top: 60px;
+}
+
+img.img3 {
+  opacity = 0.1;
+}
+
+.bg1 {
+  background: linear-gradient(135deg, #84a98c 0% 10%, #f4f1de 10% 40%, transparent 40% 100%);
+  background-repeat: no-repeat;
+  position: fixed;
+  z-index: -5;
+  height: 100%;
+  width: 100%;
+}
+
+.bg2 {
+  background: lightblue;
+  background-repeat: no-repeat;
+  position: fixed;
+  z-index: -15;
+  height: 100%;
+  width: 100%;
+}
+  
+
+.monogram {
+  position: fixed;
+  color: #f4f1de;
+  font-size: 3rem;
+  background-color: #52796f;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  left: 2rem;
+  top: 2rem;
+}
+
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.name {
+  margin: 0rem 0 0 1.5rem;
+}
+
+.sub {
+  margin-left: 3rem;
+}
+
+
+li {
+  background: lightblue;
+  transition-property: background;
+  transition-duration: 1s;
+  transition-delay: 0s;
+  height: 30px;
+}
+
+li:hover {
+  background: red;
+  transition-delay: 0s;
+}

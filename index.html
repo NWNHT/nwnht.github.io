@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#264653">
+    <link href="styles/text-style.css" rel="stylesheet">
+    <link href="styles/style.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com"> 
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> 
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@700&display=swap" rel="stylesheet">
+    <script type="text/javascript">
+      function getCursorPosition(event) {
+	      var xPos = event.clientX
+	      var yPos = event.clientY
+	      document.getElementById("display").innerHTML = `x:${xPos} y:${yPos}`;
+	      document.getElementById("xbar").style.left = (xPos - 5) + 'px';
+	      document.getElementById("ybar").style.top = (yPos - 5) + 'px';
+	    }
+    </script>
+  </head>
+  <body onmousemove="getCursorPosition(event)">
+
+    <div class="background"></div>
+    <div class="diagonal-overlay"></div>
+    <div id="xbar"></div>
+    <div id="ybar"></div>
+
+    <header>
+      <div class="monogram"><p>ln.</p></div>
+    </header>
+
+    <div class="page-container">
+      <!--<header>
+	<div class="monogram">ln</div>
+      </header>-->
+      <div class="name">
+	<h1>Lucas Nieuwenhout</h1>
+	<h2 id="display">x: y:</h2>
+      </div>
+      <nav class="menu-container">
+	<ul>
+	  <li><a href="#">home</a></li>
+	  <li><a href="#">projects</a></li>
+	  <li><a href="#">photography</a></li>
+	  <li><a href="#">resume</a></li>
+	  <li><a target="_blank" href="https://www.linkedin.com/in/nieuwenhout/">linkedin</a></li>
+	</ul>
+      </nav>
+    </div>
+  </body>
+</html>

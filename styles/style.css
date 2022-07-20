@@ -1,97 +1,153 @@
-/*
-@keyframes example {
-  from {background: blue;}
-  to {background: red;}
+/* See text-style.css for background and general formatting */
+/* || Followers */
+
+#xbar, #ybar
+{ /* This sectino controls the cursor followers */
+  position: fixed;
+  background-color: cyan;
+  top: 0;
+  left: 0;
+  width: 10px;
+  height: 10px;
+  z-index: 5;
 }
-*/
-html {
-  font-family: 'Open Sans', sans-serif;
-  color: #2f3e46;
-  background: none;
+
+/* || Main Page Container */
+.page-container
+{ /* This contains everything except for the header, by default is just normal layout.
+       The top margin controls how the contents are spaced from the bottom of the header. */
   height: 100%;
   margin: 0;
-  /*background: linear-gradient(135deg, #84a98c 0% 10%, #f4f1de 10% 40%, white 40% 100%);
-  background-repeat: no-repeat;*/
 }
 
-img {
-  object-fit: cover;
-  max-width: 100%;
-  position: fixed;
-  z-index: -10;
-  opacity: 0.5;
+.name
+{ /* This contains the left side of the main page */
+  flex: 1;
+  margin: 0;
 }
 
-img.img1 {
-  opacity = 0.1;
-}
+/* || Menu */
 
-img.img2 {
-  opacity = 0.1;
-  top: 60px;
-}
-
-img.img3 {
-  opacity = 0.1;
-}
-
-.bg1 {
-  background: linear-gradient(135deg, #84a98c 0% 10%, #f4f1de 10% 40%, transparent 40% 100%);
-  background-repeat: no-repeat;
-  position: fixed;
-  z-index: -5;
-  height: 100%;
+.menu-container
+{ /* This describes the directory list which is later put on the right for wide pages */
+  flex: 1;
+  text-align: right;
   width: 100%;
 }
 
-.bg2 {
-  background: lightblue;
-  background-repeat: no-repeat;
-  position: fixed;
-  z-index: -15;
-  height: 100%;
-  width: 100%;
-}
-  
-
-.monogram {
-  position: fixed;
-  color: #f4f1de;
-  font-size: 3rem;
-  background-color: #52796f;
-  width: 80px;
-  height: 80px;
+.menu-container ul
+{
+  margin: 0 2rem 0 auto;
+  padding: 0;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  left: 2rem;
-  top: 2rem;
+  align-items: end;
+  flex-direction: column;
+  width: fit-content;
 }
 
-body {
-  margin: 0;
-  width: 100%;
-  height: 100%;
+.menu-container ul li
+{ /* Change the top and bottom margin to adjust the space between the main page options */
+  list-style: none;
+  margin: 1rem 0 1rem 0;
 }
 
-.name {
-  margin: 0rem 0 0 1.5rem;
+.menu-container ul li a
+{ /* The padding controls the buffer zone on the :hover, 0.5rem seems reasonable */
+  padding: 0.5rem;
+  text-decoration: none;
+  font-size: 4rem;
+  color: var(--text);
+  transition: font-size 0.5s;
 }
 
-.sub {
-  margin-left: 3rem;
+/* || Background Images */
+
+.menu-container ul li a::before
+{ /* This creates all the formatting for placing the images in the background */
+  content: '';
+  position: fixed;
+  display: block;
+  top: 0; bottom: 0; left: 0; right: 0;
+  z-index: -3;
+  background-size: cover;
+  opacity: 0;
+  transition: opacity 0.75s;
+}
+
+.menu-container ul li a:hover
+{ /* Adjusted font-size on hover */
+  font-size: 4.5rem;
+}
+
+/* Each pair selects the image for the menu item, and controls the new opacity on hover. */
+li:nth-of-type(1) a::before
+{
+  background: url("../images/1.jpg") no-repeat center center !important;
+}
+
+li:nth-of-type(1) a:hover::before
+{
+  opacity: 1;
+}
+
+li:nth-of-type(2) a::before
+{
+  background: url("../images/2.jpg") no-repeat center center;
+}
+
+li:nth-of-type(2) a:hover::before
+{
+  opacity: 1
+}
+
+li:nth-of-type(3) a::before
+{
+  background: url("../images/3.jpg") no-repeat center center;
+}
+
+li:nth-of-type(3) a:hover::before
+{
+  opacity: 1
+}
+
+li:nth-of-type(4) a::before
+{
+  background: url("../images/4.jpg") no-repeat center center;
+}
+
+li:nth-of-type(4) a:hover::before
+{
+  opacity: 1
+}
+
+li:nth-of-type(5) a::before
+{
+  background: url("../images/6.jpg") no-repeat center center;
+}
+
+li:nth-of-type(5) a:hover::before
+{
+  opacity: 1
 }
 
 
-li {
-  background: lightblue;
-  transition-property: background;
-  transition-duration: 1s;
-  transition-delay: 0s;
-  height: 30px;
-}
+@media (min-width: 950px)
+{
+  .page-container
+  {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
 
-li:hover {
-  background: red;
-  transition-delay: 0s;
+  .name 
+  { /* left margin should be the same as the monogram */
+    margin: 0;
+    grid-column: 1;
+  }
+
+  .menu-container
+  {
+    grid-column: 2;
+  }
+
 }
