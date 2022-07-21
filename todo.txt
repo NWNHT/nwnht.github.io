@@ -4,3 +4,21 @@ Todo:
 - Make the home page top link move properly
 
 - Actually sort out the colours
+
+- Be able to add photos to the page by updating a link list
+
+
+Projects:
+- This website
+- Wordle
+- Lego World Map
+- Capstone
+- 3D Printing
+- LED Strip
+
+
+Colours:
+- Make a neutral scheme with highlights/accent
+- Try an accent line along the divide
+
+

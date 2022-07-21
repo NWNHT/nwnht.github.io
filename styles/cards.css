@@ -1,19 +1,28 @@
+:root
+{
+  --card-border: var(--text);
+}
 
 .card
 {
-  margin: 1rem 1rem;
-  border: 2px solid cyan;
-  display: grid;
-  grid-template-columns: 1fr 3fr;
+  margin: 1.5rem 2rem;
+  border: 2px solid var(--card-border);
+  border-radius: 8px;
+  background: var(--dark-background);
+  transition: background 0.4s;
 }
 
-.card > div
+.card:hover
 {
+  background: var(--medium-background);
+
+.card > h2, p
+{
+  margin: 1rem;
 }
 
-.card > img
+.card > p
 {
-  margin: 0;
-  object-fit: contain;
-  max-width: 100%;
+  margin-left: 3rem;
 }
+
