@@ -1,0 +1,12 @@
+figure > img
+{
+  margin: 0;
+  max-width: calc(100% - 16px);
+  border: var(--medium-background) solid 8px;
+}
+
+.content > p
+{
+  font-weight: 500;
+}
+
