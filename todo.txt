@@ -7,6 +7,10 @@ Todo:
 
 - Be able to add photos to the page by updating a link list
 
+- Dynamically serve smaller photos
+
+
+
 
 Projects:
 - This website
