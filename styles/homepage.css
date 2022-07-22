@@ -15,9 +15,9 @@
 /* || Main Page Container */
 .page-container
 { /* This contains everything except for the header, by default is just normal layout.
-       The top margin controls how the contents are spaced from the bottom of the header. */
-  height: 100%;
-  margin: 0;
+  The top margin controls how the contents are spaced from the bottom of the header. */
+height: 100%;
+margin: 0;
 }
 
 .name
@@ -31,6 +31,14 @@
   font-family: "Open Sans", Arial;
   margin: 0 0 0 2rem;
 }
+
+.name > h1
+{
+  font-size: 1.8rem;
+}
+
+
+
 
 /* || Menu */
 
@@ -61,7 +69,7 @@
 { /* The padding controls the buffer zone on the :hover, 0.5rem seems reasonable */
   padding: 0.5rem;
   text-decoration: none;
-  font-size: 4rem;
+  font-size: 3rem;
   color: var(--text);
   transition: font-size 0.5s;
 }
@@ -80,9 +88,11 @@
   transition: opacity 0.75s;
 }
 
-.menu-container ul li a:hover
-{ /* Adjusted font-size on hover */
-  font-size: 4.5rem;
+@media (min-width: 600px) {
+  .menu-container ul li a:hover
+  { /* Adjusted font-size on hover */
+    font-size: 4rem;
+  }
 }
 
 /* Each pair selects the image for the menu item, and controls the new opacity on hover. */

@@ -1,5 +1,4 @@
 Todo:
-- Make the images actually centered
 - Fix the link of the monogram?
 - Make the home page top link move properly
 
@@ -9,6 +8,7 @@ Todo:
 
 - Dynamically serve smaller photos
 
+- A format for including files in project pages
 
 
 

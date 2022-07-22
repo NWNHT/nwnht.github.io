@@ -25,21 +25,42 @@
       <p>This is a collection of photographs that I have personally taken.  Photos are taken at various locations on various dates, listed in an arbitrary order.</p>
     </div>
 
-    <img src="photography/1.jpeg">
-    <h3>This is a photo caption.</h3>
+    <script>
+      fetch("photography/photolist.json")
+        .then( (response) => response.json())
+        .then( (data) => {
+		generatePhotos(data.photos);
+	      })
+	.catch( (error) => {
+		console.error(error);
+		failedRetrieval();
+	      });
 
-    <img src="photography/2.jpeg">
-    <h3>This is a photo caption.</h3>
+      function failedRetrieval() {
+	      document.querySelector("div.content > p").innerHTML = "The photos did not load.";
+	    }
 
-    <img src="photography/3.jpeg">
-    <h3>This is a photo caption.</h3>
+      function generatePhotos(photos) {
+	      console.log("File read.");
 
-    <img src="photography/4.jpeg">
-    <h3>This is a photo caption.</h3>
+	      const content = document.querySelector("body");
+	      var photograph, caption;
 
-    <img src="photography/5.jpeg">
-    <h3>This is a photo caption.</h3>
+	      for (const photo in photos) {
+		      // Create and format image, append to body
+		      photograph = document.createElement("img");
+		      photograph.src = photos[photo].src;
+		      photograph.alt = photos[photo].alt;
 
-    <!--<script type="text/javascript" src="photography/photolist.js"></script>-->
+		      content.appendChild(photograph);
+
+		      // Create caption
+		      caption = document.createElement("h3");
+		      caption.innerHTML = photos[photo].caption;
+
+		      content.appendChild(caption);
+		    }
+	    }
+    </script>
   </body>
 </html>
