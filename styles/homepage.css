@@ -157,7 +157,7 @@ li:nth-of-type(5) a:hover::before
 
   .name 
   { /* left margin should be the same as the monogram */
-    margin: 0;
+    margin-top: 6rem;
     grid-column: 1;
   }
 

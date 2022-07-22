@@ -3,6 +3,27 @@
 {
   --light-background: #F3FCF8;
   /*--medium-background: #264653;*/
+  --medium-background: #2a5639;
+  --medium-background-fade: rgb(21, 137, 255, 0.8);
+  --dark-background: #1a3a1e;
+  --accent: #fc5130;
+  --accent: #01BAEF;
+  --accent: #FC4603;
+  --text: #ecffff;
+  --mobile-width: 900px;
+  --text-size: 15px;
+  --background-opacity: 0.8;
+  --split: 30%;
+
+  --link-fresh: var(--accent);
+  --link-visited: #DD2803;
+  --link-hover: #FD9A86;
+}
+
+/* Default colour scheme
+
+  --light-background: #F3FCF8;
+  --medium-background: #264653;
   --medium-background: rgb(38,70,83);
   --medium-background-fade: rgb(38,70,83,0.8);
   --dark-background: #303036;
@@ -14,7 +35,8 @@
   --link-fresh: #FD795E;
   --link-visited: #DD2803;
   --link-hover: #FD9A86;
-}
+
+*/
 
 html
 {
@@ -54,9 +76,11 @@ body
   position: fixed;
   width: 100%;
   height: 100vh;
-  background: linear-gradient(135deg, var(--medium-background-fade) 0% 40%, transparent 40% 100%);
+  /*background: linear-gradient(90deg, var(--medium-background) 0% 40.5%, var(--accent) 40.5% 41%, transparent 41% 100%);*/
+  background: linear-gradient(90deg, var(--medium-background) 0% var(--split), transparent var(--split) 100%);
   z-index: -2;
   background-attachment: scroll;
+  opacity: var(--background-opacity);
 }
 
 header
@@ -77,17 +101,17 @@ padding: 0.5rem;
 background-color: var(--dark-background);
 font-size: 3rem;
 margin: 2rem 2rem 2rem calc(2rem - 4px);
-height: 60px;
-width: 60px;
+height: 3.5rem;
+width: 3.5rem;
 text-decoration: none;
 z-index: 3;
-border: var(--medium-background-fade) solid 4px;
+border: var(--accent) solid 4px;
 }
 
 .monogram p
 {
   margin: 0;
-  font-size: 48px;
+  font-size: 2.5rem;
   font-weight: 700;
   color: var(--text);
 }
@@ -187,7 +211,7 @@ h4
   margin-top: 1rem;
   margin-bottom: 2rem;
   color: var(--text);
-  border-image: linear-gradient(90deg, transparent 0%, var(--light-background) 50%, transparent 100%) 0 0 100%;
+  border-image: linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%) 0 0 100%;
   border-style: solid;
 }
 
@@ -196,6 +220,7 @@ h4
 
 img
 {
+  display: block;
   max-width: 100%;
 }
 
@@ -210,11 +235,10 @@ figcaption
   margin-bottom: 2rem;
 }
 
-@media (min-width: 600px) {
-  img
+@media (min-width: 700px) {
+  .content > img
   {
-    max-width: 92%;
-    margin-left: 2rem;
-    margin-right; 2rem;
+    max-width: calc(100% - 4rem);
+    margin: 0 2rem;
   }
 }

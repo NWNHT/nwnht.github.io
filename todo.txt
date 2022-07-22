@@ -1,15 +1,14 @@
 Todo:
 - Fix the link of the monogram?
+  - sort out a monogram
+
 - Make the home page top link move properly
 
 - Actually sort out the colours
 
-- Be able to add photos to the page by updating a link list
-
-- Dynamically serve smaller photos
-
 - A format for including files in project pages
 
+- Create a resume page (maybe)
 
 
 Projects:

@@ -1,39 +1,39 @@
 {
   "photos": [
-  {
-    "srcset": "test1",
-      "sizes": "test2",
+    {
+      "srcset": "photography/1-small.jpeg 1000w, photography/1.jpeg 3492w",
+      "sizes": "(max-width: 600px) 1000w, 3492w",
       "src": "photography/1.jpeg",
       "alt": "test4",
-      "caption": "test5"
-  },
-  {
-    "srcset": "test6",
+      "caption": "This is the caption of the photograph"
+    },
+    {
+      "srcset": "test6",
       "sizes": "test7",
       "src": "photography/2.jpeg",
       "alt": "test9",
-      "caption": "test0"
-  },
-  {
-    "srcset": "test1",
+      "caption": "this is short"
+    },
+    {
+      "srcset": "test1",
       "sizes": "test2",
       "src": "photography/3.jpeg",
       "alt": "test4",
-      "caption": "test5"
-  },
-  {
-    "srcset": "test1",
+      "caption": "This is a really long caption, I don't know how this will display"
+    },
+    {
+      "srcset": "test1",
       "sizes": "test2",
       "src": "photography/4.jpeg",
       "alt": "test4",
       "caption": "test5"
-  },
-  {
-    "srcset": "test1",
+    },
+    {
+      "srcset": "test1",
       "sizes": "test2",
       "src": "photography/5.jpeg",
       "alt": "test4",
       "caption": "test5"
-  }
+    }
   ]
 }
