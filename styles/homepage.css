@@ -1,5 +1,6 @@
 /* See text-style.css for background and general formatting */
 /* || Followers */
+@import "site.css";
 
 #xbar, #ybar
 { /* This sectino controls the cursor followers */
