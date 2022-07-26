@@ -1,7 +1,7 @@
 default: exe
 
 exe: process-photo.c libcJSON.a 
-	gcc process-photo.c libcJSON.a -o $@
+	gcc -Wall process-photo.c libcJSON.a -o $@
 
 libcJSON.a: cJSON.o
 	ar -rcv $@ $^
