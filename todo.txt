@@ -24,4 +24,6 @@ Colours:
 - Make a neutral scheme with highlights/accent
 - Try an accent line along the divide
 
+Writing:
+- Notion is a bad text editor
 

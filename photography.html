@@ -19,8 +19,8 @@
 
     <header>
       <ul>
-	<li><a href="projects.html">projects</a></li>
-	<li><a href="photography.html">photography</a></li>
+	<li><a href="/projects.html">projects</a></li>
+	<li><a href="/photography.html">photography</a></li>
 	<li><a href="#">dead link</a></li>
       </ul>
       <a href="/" class="monogram"><p>ln.</p></a>
@@ -32,7 +32,7 @@
     </div>
 
     <script>
-      fetch("photography/photolist.json")
+      fetch("/photography/photolist.json")
         .then( (response) => response.json())
         .then( (data) => {
 		generatePhotos(data.photos);
