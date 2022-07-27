@@ -1,6 +1,6 @@
-default: exe
+default: PhotoManage
 
-exe: process-photo.c libcJSON.a 
+PhotoManage: process-photo.c libcJSON.a 
 	gcc -Wall process-photo.c libcJSON.a -o $@
 
 libcJSON.a: cJSON.o

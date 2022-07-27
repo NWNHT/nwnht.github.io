@@ -1,38 +1,23 @@
 {
 	"photos":	[{
 			"src":	"/photography/photos/1.jpeg",
-			"alt":	"test4",
-			"caption":	"This is the caption of the photograph",
+			"alt":	"Reflections of trees off pond(9 Green).",
+			"caption":	"Left approach of 9 Green",
 			"identifier":	1
 		}, {
-			"src":	"/photography/photos/2.jpeg",
-			"alt":	"test9",
-			"caption":	"this is short",
-			"identifier":	7
-		}, {
 			"src":	"/photography/photos/3.jpeg",
-			"alt":	"test4",
-			"caption":	"This is a realllllllllllllly long caption, I don't know how this will display",
-			"identifier":	2
+			"caption":	"",
+			"identifier":	2,
+			"alt":	"Pink flower in front of grass background."
 		}, {
-			"src":	"/photography/photos/4.jpeg",
-			"alt":	"test4",
-			"caption":	"test5",
+			"src":	"/photography/photos/5.jpeg",
+			"alt":	"Interior of Notre-Dame Basilica of Montreal",
+			"caption":	"Notre-Dame Basilica of Montreal",
 			"identifier":	3
 		}, {
-			"src":	"/photography/photos/9",
-			"alt":	"9",
-			"identifier":	9,
-			"caption":	"This is the new caption for 9"
-		}, {
 			"src":	"/photography/photos/9.jpeg",
-			"alt":	"photo description",
-			"caption":	"photo caption",
-			"identifier":	10
-		}, {
-			"src":	"/photography/photos/test.jpeg",
-			"alt":	"newalt text",
-			"caption":	"newcaption text",
-			"identifier":	11
+			"alt":	"Red pin on golf green(2 Green).",
+			"caption":	"SVGCC - Hole 2",
+			"identifier":	4
 		}]
 }
