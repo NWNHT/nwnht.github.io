@@ -2,13 +2,14 @@ Todo:
 - Fix the link of the monogram?
   - sort out a monogram
 
-- Make the home page top link move properly
 
 - Actually sort out the colours
 
 - A format for including files in project pages
 
 - Create a resume page (maybe)
+
+- Sort out a better header and footer/format situation, not specified on each page
 
 
 Projects:
@@ -22,7 +23,6 @@ Projects:
 
 Colours:
 - Make a neutral scheme with highlights/accent
-- Try an accent line along the divide
 
 Writing:
 - Notion is a bad text editor
