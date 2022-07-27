@@ -12,24 +12,22 @@
   #define INCLUDED 0
 #endif
 
-// Create a unique identifier for the images? by reading the latest one?
-// Create function to read all images from the file and prompt for caption/alt?
-// Create function to remove an image by the alt or by the caption? or by the identifier
-// Create function to alter caption or alt given an identifier
 // Create function to reorder based on identifier?
 // - Identifiers in multiples of 10 and you can reassign, then refactor?
 
 
-cJSON *get_json_object(char *filename);
-void print_json(cJSON *json);
-int add_photo(cJSON *json);
-int remove_photo(cJSON *json);
-int edit_photo(cJSON *json);
-int list_photos(cJSON *json);
+cJSON *GetJSONObject(char *filename);
+int AddPhoto(cJSON *json);
+int RemovePhoto(cJSON *json);
+int EditPhoto(cJSON *json);
+int ListPhotos(cJSON *json);
+int SaveJSON(cJSON *json, char *filename);
 
-int get_filepath(char *buffer);
-int get_altcaption(char *buffer);
-int get_highest_identifier(cJSON *json);
+void PrintJSON(cJSON *json);
+void PrintHR(void);
+int GetFilepath(char *buffer);
+int GetStringInput(char *buffer);
+int GetHighestIdentifier(cJSON *json);
 cJSON *PhotoPointerByIdentifier(cJSON *json, int identifier);
 int PhotoIndexByIdentifier(cJSON *json, int identifier);
 void EditItemInObject(cJSON* json, char *item);
@@ -44,13 +42,14 @@ int main(void) {
 	}
 
 	// Open file and check successful
-	cJSON *json = get_json_object(JSONFILENAME);
+	cJSON *json = GetJSONObject(JSONFILENAME);
 	if (json == NULL) {
 		return 1;
 	} else {
 		printf("JSON successfully parsed.\n");
 	}
 
+	// Get the photos array
 	cJSON *photos = cJSON_GetObjectItemCaseSensitive(json, "photos");
 	if (photos == NULL) {
 		perror("Unsuccessful assignment of 'photos'.\n");
@@ -63,6 +62,7 @@ int main(void) {
 		char discard;
 
 		// Print Menu
+		PrintHR();
 		printf("Please choose an option:\n"
 				"\t[ a ] - Add Photo\n"
 				"\t[ r ] - Remove Photo\n"
@@ -77,31 +77,30 @@ int main(void) {
 			c = getchar();
 		}
 		while ((discard = getchar()) != '\n' && discard != EOF) {}
-		printf("Character entered: %c\n", c);
-
-		print_json(json);
+		PrintHR();
 
 		// Switch on character
 		switch (c) {
 			case 'a':
 				// Add photo
-				add_photo(photos);
+				AddPhoto(photos);
 				break;
 			case 'r':
 				// Remove photo
-				remove_photo(photos);
+				RemovePhoto(photos);
 				break;
 			case 'e':
 				// Edit photo
-				edit_photo(photos);
+				EditPhoto(photos);
 				break;
 			case 'l':
 				// Hopefully list photos
-				list_photos(photos);
+				ListPhotos(photos);
 				break;
 			case 's':
 				// Write and quit
 				printf("Saving and Quitting.\n");
+				printf("Wrote %d characters.\n", SaveJSON(json, JSONFILENAME));
 				return 0;
 				break;
 			case 'q':
@@ -119,17 +118,9 @@ int main(void) {
 }
 
 
-// Print the json object
-void print_json(cJSON *json) {
-	char *string = cJSON_Print(json);
-	printf("%s\n", string);
-	free(string);
-}
-
-
 // Given filename, open if possible and return non-null json pointer
 // This will require cleanup with free()
-cJSON *get_json_object(char *filename) {
+cJSON *GetJSONObject(char *filename) {
 
 	// Open file 
 	FILE* fp = fopen(filename, "r");
@@ -162,26 +153,26 @@ cJSON *get_json_object(char *filename) {
 
 
 // Add photo to json
-int add_photo(cJSON *json) {
+int AddPhoto(cJSON *json) {
 
 	// Create Photo object
 	cJSON *photo = cJSON_CreateObject();
 
 	// Get the highest identifier from existing photos
-	int max = get_highest_identifier(json);
+	int max = GetHighestIdentifier(json);
 
 	// Get src, alt, and caption, add strings to object
 	char inputBuffer[INPUTBUFFERSIZE];
 	printf("The identifier will be: %d\n", (max + 1));
-	get_filepath(inputBuffer);
+	GetFilepath(inputBuffer);
 	cJSON_AddStringToObject(photo, "src", inputBuffer);
 
 	printf("Enter the 'alt': ");
-	get_altcaption(inputBuffer);
+	GetStringInput(inputBuffer);
 	cJSON_AddStringToObject(photo, "alt", inputBuffer);
 
 	printf("Enter the caption: ");
-	get_altcaption(inputBuffer);
+	GetStringInput(inputBuffer);
 	cJSON_AddStringToObject(photo, "caption", inputBuffer);
 
 	cJSON_AddNumberToObject(photo, "identifier", max + 1);
@@ -194,7 +185,7 @@ int add_photo(cJSON *json) {
 
 
 // Remove photo by identifier
-int remove_photo(cJSON *json) {
+int RemovePhoto(cJSON *json) {
 
 	// Request identifier from user
 	int identifierToRemove;
@@ -215,7 +206,7 @@ int remove_photo(cJSON *json) {
 
 
 // Edit photo by identifier
-int edit_photo(cJSON *json) {
+int EditPhoto(cJSON *json) {
 	printf("This function has not been implemented yet.\n");
 	// ReplaceItemInArray or ReplaceItemViaPointer or ReplaceItemInObjectCaseSensitive
 
@@ -239,7 +230,8 @@ int edit_photo(cJSON *json) {
 			"[ c ] - Caption\n"
 			"[ a ] - alt\n"
 			"[ s ] - src\n"
-			"[ q ] - Cancel Edit\n");
+			"[ q ] - Cancel Edit\n"
+			"   Input: ");
 
 
 	// Wait for input, condition for no newline and only accept first character
@@ -247,7 +239,6 @@ int edit_photo(cJSON *json) {
 		c = getchar();
 	}
 	while ((discard = getchar()) != '\n' && discard != EOF) {}
-	printf("Character entered: %c\n", c);
 
 	// Switch on entered character, throw out to function to edit item
 	switch (c) {
@@ -274,7 +265,7 @@ int edit_photo(cJSON *json) {
 
 
 // List all photos by identifier, src, alt, and caption
-int list_photos(cJSON *json) {
+int ListPhotos(cJSON *json) {
 
 	// Read through all photos and print
 	cJSON *loop = json ? json->child : 0;
@@ -295,12 +286,36 @@ int list_photos(cJSON *json) {
 	return count;
 }
 
+int SaveJSON(cJSON *json, char *filename) {
+
+	// Create output and write to file
+	char *output = cJSON_Print(json);
+	FILE* fwrite = fopen(filename, "w+");
+	int count = fprintf(fwrite, "%s", output);
+	fclose(fwrite);
+	return count;
+}
+
 
 /* Utility Functions */
 
 
+// Print the json object
+void PrintJSON(cJSON *json) {
+	char *string = cJSON_Print(json);
+	printf("%s\n", string);
+	free(string);
+}
+
+
+// Print a divider
+void PrintHR(void) {
+	printf("------------------------------------------\n");
+}
+
+
 // Given buffer, get input for photo filepath
-int get_filepath(char *buffer) {
+int GetFilepath(char *buffer) {
 
 	char temp[100] = "/photography/photos/";
 	// Request input from user with file prefix
@@ -317,7 +332,7 @@ int get_filepath(char *buffer) {
 
 
 // Given buffer, get alt or caption input
-int get_altcaption(char *buffer) {
+int GetStringInput(char *buffer) {
 	// Request input to given buffer and return
 	// Apparently it space terminates if you just use "%s"?
 	fgets(buffer, INPUTBUFFERSIZE, stdin);
@@ -327,7 +342,7 @@ int get_altcaption(char *buffer) {
 
 
 // Return the highest identifier of the photos
-int get_highest_identifier(cJSON *json) {
+int GetHighestIdentifier(cJSON *json) {
 	int max = 1;
 	cJSON *loop = json ? json->child : 0;
 
@@ -381,15 +396,15 @@ void EditItemInObject(cJSON* json, char *item) {
 
 	if (!strcmp(item, "identifier")) {
 		printf("Enter new identifier, mind existing identifiers: ");
-		get_altcaption(buffer);
+		GetStringInput(buffer);
 		cJSON_DeleteItemFromObjectCaseSensitive(json, item);
 		cJSON_AddNumberToObject(json, item, atoi(buffer));
 		return;
 	} else if (!strcmp(item, "src")) {
-		get_filepath(buffer);
+		GetFilepath(buffer);
 	} else {
 		printf("Please enter new %s: ", item);
-		get_altcaption(buffer);
+		GetStringInput(buffer);
 	}
 
 	cJSON_DeleteItemFromObjectCaseSensitive(json, item);

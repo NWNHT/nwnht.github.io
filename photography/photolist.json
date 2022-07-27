@@ -3,30 +3,36 @@
 			"src":	"/photography/photos/1.jpeg",
 			"alt":	"test4",
 			"caption":	"This is the caption of the photograph",
-			"identifier": 1
+			"identifier":	1
 		}, {
 			"src":	"/photography/photos/2.jpeg",
 			"alt":	"test9",
 			"caption":	"this is short",
-			"identifier": 7
-
+			"identifier":	7
 		}, {
 			"src":	"/photography/photos/3.jpeg",
 			"alt":	"test4",
 			"caption":	"This is a realllllllllllllly long caption, I don't know how this will display",
-			"identifier": 2
-
+			"identifier":	2
 		}, {
 			"src":	"/photography/photos/4.jpeg",
 			"alt":	"test4",
 			"caption":	"test5",
-			"identifier": 3
-
+			"identifier":	3
 		}, {
-			"src":	"/photography/photos/5.jpeg",
-			"alt":	"test4",
-			"caption":	"test5",
-			"identifier": 8
-
+			"src":	"/photography/photos/9",
+			"alt":	"9",
+			"identifier":	9,
+			"caption":	"This is the new caption for 9"
+		}, {
+			"src":	"/photography/photos/9.jpeg",
+			"alt":	"photo description",
+			"caption":	"photo caption",
+			"identifier":	10
+		}, {
+			"src":	"/photography/photos/test.jpeg",
+			"alt":	"newalt text",
+			"caption":	"newcaption text",
+			"identifier":	11
 		}]
 }
