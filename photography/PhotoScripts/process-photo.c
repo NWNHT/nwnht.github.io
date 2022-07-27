@@ -4,6 +4,7 @@
 #include "cJSON.h"
 
 #define JSONFILENAME "../photolist.json"
+#define INPUTBUFFERSIZE 256
 
 #ifdef cJSON__h
   #define INCLUDED 1
@@ -31,6 +32,7 @@ int get_altcaption(char *buffer);
 int get_highest_identifier(cJSON *json);
 cJSON *PhotoPointerByIdentifier(cJSON *json, int identifier);
 int PhotoIndexByIdentifier(cJSON *json, int identifier);
+void EditItemInObject(cJSON* json, char *item);
 
 
 int main(void) {
@@ -169,7 +171,7 @@ int add_photo(cJSON *json) {
 	int max = get_highest_identifier(json);
 
 	// Get src, alt, and caption, add strings to object
-	char inputBuffer[256];
+	char inputBuffer[INPUTBUFFERSIZE];
 	printf("The identifier will be: %d\n", (max + 1));
 	get_filepath(inputBuffer);
 	cJSON_AddStringToObject(photo, "src", inputBuffer);
@@ -200,24 +202,15 @@ int remove_photo(cJSON *json) {
 	scanf("%d", &identifierToRemove);
 	printf("Removing item %d.\n", identifierToRemove);
 
-	// Loop through photos looking for identifier, when found, remove
-	cJSON *loop = json ? json->child : 0;
-	int count = 0;
-	while (loop) {
-
-		if (cJSON_GetObjectItem(loop, "identifier")->valueint == identifierToRemove) {
-			cJSON_DeleteItemFromArray(json, count);
-			printf("Photo removed.\n");
-			return count;
-		}
-
-		loop = loop->next;
-		count += 1;
+	int indexToRemove = PhotoIndexByIdentifier(json, identifierToRemove);
+	if (indexToRemove == -1) {
+		printf("Could not find photo with identifier %d.\n", identifierToRemove);
+		return -1;
+	} else {
+		cJSON_DeleteItemFromArray(json, indexToRemove);
+		printf("Photo removed.\n");
+		return indexToRemove;
 	}
-
-	// If identifier not found, notify user
-	printf("Could not find photo with identifier %d.\n", identifierToRemove);
-	return -1;
 }
 
 
@@ -232,23 +225,51 @@ int edit_photo(cJSON *json) {
 	scanf("%d", &identifierToEdit);
 	printf("Selecting item %d.\n", identifierToEdit);
 
-	// Loop through photos looking for identifier, when found present present
-	cJSON *loop = json ? json->child : 0;
-	int count = 0;
-	while (loop) {
-
-		if (cJSON_GetObjectItem(loop, "identifier")->valueint == identifierToEdit) {
-
-
-
-
-			return count;
-		}
-
-		loop = loop->next;
-		count += 1;
+	cJSON *itemToEdit = PhotoPointerByIdentifier(json, identifierToEdit);
+	if (itemToEdit == NULL) {
+		printf("Could not find photo with identifier %d.\n", identifierToEdit);
+		return -1;
 	}
-	return 1;
+
+	// Request input on which field/item to edit
+	char c = '\n';
+	char discard;
+	printf("Photo found, which field would you like to edit?\n"
+			"[ i ] - Identifier\n"
+			"[ c ] - Caption\n"
+			"[ a ] - alt\n"
+			"[ s ] - src\n"
+			"[ q ] - Cancel Edit\n");
+
+
+	// Wait for input, condition for no newline and only accept first character
+	while (c == '\n') {
+		c = getchar();
+	}
+	while ((discard = getchar()) != '\n' && discard != EOF) {}
+	printf("Character entered: %c\n", c);
+
+	// Switch on entered character, throw out to function to edit item
+	switch (c) {
+		case 'i':
+			EditItemInObject(itemToEdit, "identifier");
+			break;
+		case 'c':
+			EditItemInObject(itemToEdit, "caption");
+			break;
+		case 'a':
+			EditItemInObject(itemToEdit, "alt");
+			break;
+		case 's':
+			EditItemInObject(itemToEdit, "src");
+			break;
+		case 'q':
+			printf("Exiting edit mode with no changes made.\n");
+			return 0;
+			break;
+	}
+	printf("Edit made to photo.\n");
+	return 0;
 }
 
 
@@ -284,7 +305,8 @@ int get_filepath(char *buffer) {
 	char temp[100] = "/photography/photos/";
 	// Request input from user with file prefix
 	printf("Enter the filepath of the photo:\n/photography/photos/");
-	scanf("%s", buffer);
+	fgets(buffer, INPUTBUFFERSIZE, stdin);
+	buffer[strcspn(buffer, "\n")] = 0;
 
 	// Prepend the path and copy back to buffer
 	strcat(temp, buffer);
@@ -297,7 +319,9 @@ int get_filepath(char *buffer) {
 // Given buffer, get alt or caption input
 int get_altcaption(char *buffer) {
 	// Request input to given buffer and return
-	scanf("%s", buffer);
+	// Apparently it space terminates if you just use "%s"?
+	fgets(buffer, INPUTBUFFERSIZE, stdin);
+	buffer[strcspn(buffer, "\n")] = 0;
 	return strlen(buffer);
 }
 
@@ -347,4 +371,27 @@ int PhotoIndexByIdentifier(cJSON *json, int identifier) {
 		count += 1;
 	}
 	return -1;
+}
+
+
+// Given pointer to object, name of item, and buffer, edit the item in the photo object
+void EditItemInObject(cJSON* json, char *item) {
+
+	char buffer[INPUTBUFFERSIZE];
+
+	if (!strcmp(item, "identifier")) {
+		printf("Enter new identifier, mind existing identifiers: ");
+		get_altcaption(buffer);
+		cJSON_DeleteItemFromObjectCaseSensitive(json, item);
+		cJSON_AddNumberToObject(json, item, atoi(buffer));
+		return;
+	} else if (!strcmp(item, "src")) {
+		get_filepath(buffer);
+	} else {
+		printf("Please enter new %s: ", item);
+		get_altcaption(buffer);
+	}
+
+	cJSON_DeleteItemFromObjectCaseSensitive(json, item);
+	cJSON_AddStringToObject(json, item, buffer);
 }
