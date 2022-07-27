@@ -2,22 +2,31 @@
 	"photos":	[{
 			"src":	"/photography/photos/1.jpeg",
 			"alt":	"test4",
-			"caption":	"This is the caption of the photograph"
+			"caption":	"This is the caption of the photograph",
+			"identifier": 1
 		}, {
 			"src":	"/photography/photos/2.jpeg",
 			"alt":	"test9",
-			"caption":	"this is short"
+			"caption":	"this is short",
+			"identifier": 7
+
 		}, {
 			"src":	"/photography/photos/3.jpeg",
 			"alt":	"test4",
-			"caption":	"This is a realllllllllllllly long caption, I don't know how this will display"
+			"caption":	"This is a realllllllllllllly long caption, I don't know how this will display",
+			"identifier": 2
+
 		}, {
 			"src":	"/photography/photos/4.jpeg",
 			"alt":	"test4",
-			"caption":	"test5"
+			"caption":	"test5",
+			"identifier": 3
+
 		}, {
 			"src":	"/photography/photos/5.jpeg",
 			"alt":	"test4",
-			"caption":	"test5"
+			"caption":	"test5",
+			"identifier": 8
+
 		}]
 }

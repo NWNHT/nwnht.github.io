@@ -25,8 +25,12 @@ int add_photo(cJSON *json);
 int remove_photo(cJSON *json);
 int edit_photo(cJSON *json);
 int list_photos(cJSON *json);
+
 int get_filepath(char *buffer);
 int get_altcaption(char *buffer);
+int get_highest_identifier(cJSON *json);
+cJSON *PhotoPointerByIdentifier(cJSON *json, int identifier);
+int PhotoIndexByIdentifier(cJSON *json, int identifier);
 
 
 int main(void) {
@@ -83,15 +87,15 @@ int main(void) {
 				break;
 			case 'r':
 				// Remove photo
-				remove_photo(json);
+				remove_photo(photos);
 				break;
 			case 'e':
 				// Edit photo
-				edit_photo(json);
+				edit_photo(photos);
 				break;
 			case 'l':
 				// Hopefully list photos
-				list_photos(json);
+				list_photos(photos);
 				break;
 			case 's':
 				// Write and quit
@@ -158,31 +162,15 @@ cJSON *get_json_object(char *filename) {
 // Add photo to json
 int add_photo(cJSON *json) {
 
-	// Three separate inputs, provide partial relative path, alt, and caption, assign identifier
-
 	// Create Photo object
 	cJSON *photo = cJSON_CreateObject();
 
-	// Read photos to find maximum identifier
-	// Loop through each array element of the json, reading the identifier element, saving the max
-
-	// cJSON_GetArraySize and cJSON_ArrayForEach
-
-	// TODO: This is not working quite yet, seems to fail when included
-	// unsigned int max = 1;
-	// cJSON_ArrayForEach(photo, json) {
-	// 	cJSON *identifier = cJSON_GetObjectItemCaseSensitive(photo, "identifier");
-	// 	if (identifier != NULL) {
-	// 		if (identifier->valueint > max) {
-	// 			max = identifier->valueint;
-	// 		}
-	// 	}
-	// }
-
-
+	// Get the highest identifier from existing photos
+	int max = get_highest_identifier(json);
 
 	// Get src, alt, and caption, add strings to object
 	char inputBuffer[256];
+	printf("The identifier will be: %d\n", (max + 1));
 	get_filepath(inputBuffer);
 	cJSON_AddStringToObject(photo, "src", inputBuffer);
 
@@ -194,34 +182,100 @@ int add_photo(cJSON *json) {
 	get_altcaption(inputBuffer);
 	cJSON_AddStringToObject(photo, "caption", inputBuffer);
 
-	// cJSON_AddNumberToObject(photo, "identifier", 9);
+	cJSON_AddNumberToObject(photo, "identifier", max + 1);
 
 	// Add Photo Item to Photos Array
 	cJSON_AddItemToArray(json, photo);
 
-	return 0;
+	return max + 1;
 }
 
 
 // Remove photo by identifier
 int remove_photo(cJSON *json) {
-	printf("This function has not been implemented yet.\n");
-	return 1;
+
+	// Request identifier from user
+	int identifierToRemove;
+	printf("Enter the identifier of the photo to remove: ");
+	scanf("%d", &identifierToRemove);
+	printf("Removing item %d.\n", identifierToRemove);
+
+	// Loop through photos looking for identifier, when found, remove
+	cJSON *loop = json ? json->child : 0;
+	int count = 0;
+	while (loop) {
+
+		if (cJSON_GetObjectItem(loop, "identifier")->valueint == identifierToRemove) {
+			cJSON_DeleteItemFromArray(json, count);
+			printf("Photo removed.\n");
+			return count;
+		}
+
+		loop = loop->next;
+		count += 1;
+	}
+
+	// If identifier not found, notify user
+	printf("Could not find photo with identifier %d.\n", identifierToRemove);
+	return -1;
 }
 
 
 // Edit photo by identifier
 int edit_photo(cJSON *json) {
 	printf("This function has not been implemented yet.\n");
+	// ReplaceItemInArray or ReplaceItemViaPointer or ReplaceItemInObjectCaseSensitive
+
+	// Request identifier from user
+	int identifierToEdit;
+	printf("Enter the identifier of the photo to edit: ");
+	scanf("%d", &identifierToEdit);
+	printf("Selecting item %d.\n", identifierToEdit);
+
+	// Loop through photos looking for identifier, when found present present
+	cJSON *loop = json ? json->child : 0;
+	int count = 0;
+	while (loop) {
+
+		if (cJSON_GetObjectItem(loop, "identifier")->valueint == identifierToEdit) {
+
+
+
+
+			return count;
+		}
+
+		loop = loop->next;
+		count += 1;
+	}
 	return 1;
 }
 
 
 // List all photos by identifier, src, alt, and caption
 int list_photos(cJSON *json) {
-	printf("This function has not been implemented yet.\n");
-	return 1;
+
+	// Read through all photos and print
+	cJSON *loop = json ? json->child : 0;
+	int count = 0;
+
+	printf("Photos in 'photolist.json':\n");
+	while (loop) {
+
+		printf("Identifier:\t %d\n", cJSON_GetObjectItem(loop, "identifier")->valueint);
+		printf("Caption:\t %s\n", cJSON_GetObjectItem(loop, "caption")->valuestring);
+		printf("alt:\t\t %s\n", cJSON_GetObjectItem(loop, "alt")->valuestring);
+		printf("src:\t\t %s\n\n", cJSON_GetObjectItem(loop, "src")->valuestring);
+
+		loop = loop->next;
+		count += 1;
+	}
+
+	return count;
 }
+
+
+/* Utility Functions */
 
 
 // Given buffer, get input for photo filepath
@@ -242,8 +296,55 @@ int get_filepath(char *buffer) {
 
 // Given buffer, get alt or caption input
 int get_altcaption(char *buffer) {
+	// Request input to given buffer and return
 	scanf("%s", buffer);
 	return strlen(buffer);
 }
 
 
+// Return the highest identifier of the photos
+int get_highest_identifier(cJSON *json) {
+	int max = 1;
+	cJSON *loop = json ? json->child : 0;
+
+	while (loop) {
+		cJSON *val = cJSON_GetObjectItem(loop, "identifier");
+		if (val->valueint > max) {
+			max = val->valueint;
+		}
+		loop = loop->next;
+	}
+	return max;
+}
+
+
+// Given json array and photo identifier, return pointer to object in array, null if not found
+cJSON *PhotoPointerByIdentifier(cJSON *json, int identifier) {
+
+	cJSON *loop = json ? json->child : 0;
+
+	while (loop) {
+		if (cJSON_GetObjectItem(loop, "identifier")->valueint == identifier) {
+			return loop;
+		}
+		loop = loop->next;
+	}
+	return NULL;
+}
+
+
+// Given json array and photo identifier, return index of object in array, -1 if not found
+int PhotoIndexByIdentifier(cJSON *json, int identifier) {
+
+	cJSON *loop = json ? json->child : 0;
+	int count = 0;
+
+	while (loop) {
+		if (cJSON_GetObjectItem(loop, "identifier")->valueint == identifier) {
+			return count;
+		}
+		loop = loop->next;
+		count += 1;
+	}
+	return -1;
+}
