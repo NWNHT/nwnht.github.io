@@ -25,6 +25,8 @@ int add_photo(cJSON *json);
 int remove_photo(cJSON *json);
 int edit_photo(cJSON *json);
 int list_photos(cJSON *json);
+int get_filepath(char *buffer);
+int get_altcaption(char *buffer);
 
 
 int main(void) {
@@ -71,11 +73,13 @@ int main(void) {
 		while ((discard = getchar()) != '\n' && discard != EOF) {}
 		printf("Character entered: %c\n", c);
 
+		print_json(json);
+
 		// Switch on character
 		switch (c) {
 			case 'a':
 				// Add photo
-				printf("spicy\n");
+				add_photo(photos);
 				break;
 			case 'r':
 				// Remove photo
@@ -159,11 +163,38 @@ int add_photo(cJSON *json) {
 	// Create Photo object
 	cJSON *photo = cJSON_CreateObject();
 
-	// Add string to object x3
-	cJSON_AddStringToObject(photo, "src", "/photography/photos/9.jpeg");
-	cJSON_AddStringToObject(photo, "caption", "test2");
-	cJSON_AddStringToObject(photo, "alt", "test3");
-	cJSON_AddStringToObject(photo, "identifier", "0001");
+	// Read photos to find maximum identifier
+	// Loop through each array element of the json, reading the identifier element, saving the max
+
+	// cJSON_GetArraySize and cJSON_ArrayForEach
+
+	// TODO: This is not working quite yet, seems to fail when included
+	// unsigned int max = 1;
+	// cJSON_ArrayForEach(photo, json) {
+	// 	cJSON *identifier = cJSON_GetObjectItemCaseSensitive(photo, "identifier");
+	// 	if (identifier != NULL) {
+	// 		if (identifier->valueint > max) {
+	// 			max = identifier->valueint;
+	// 		}
+	// 	}
+	// }
+
+
+
+	// Get src, alt, and caption, add strings to object
+	char inputBuffer[256];
+	get_filepath(inputBuffer);
+	cJSON_AddStringToObject(photo, "src", inputBuffer);
+
+	printf("Enter the 'alt': ");
+	get_altcaption(inputBuffer);
+	cJSON_AddStringToObject(photo, "alt", inputBuffer);
+
+	printf("Enter the caption: ");
+	get_altcaption(inputBuffer);
+	cJSON_AddStringToObject(photo, "caption", inputBuffer);
+
+	// cJSON_AddNumberToObject(photo, "identifier", 9);
 
 	// Add Photo Item to Photos Array
 	cJSON_AddItemToArray(json, photo);
@@ -192,5 +223,27 @@ int list_photos(cJSON *json) {
 	return 1;
 }
 
+
+// Given buffer, get input for photo filepath
+int get_filepath(char *buffer) {
+
+	char temp[100] = "/photography/photos/";
+	// Request input from user with file prefix
+	printf("Enter the filepath of the photo:\n/photography/photos/");
+	scanf("%s", buffer);
+
+	// Prepend the path and copy back to buffer
+	strcat(temp, buffer);
+	memcpy(buffer, temp, 100 * sizeof(char));
+
+	return strlen(buffer);
+}
+
+
+// Given buffer, get alt or caption input
+int get_altcaption(char *buffer) {
+	scanf("%s", buffer);
+	return strlen(buffer);
+}
 
 
