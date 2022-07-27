@@ -17,6 +17,7 @@
 .card:hover
 {
   background: var(--medium-background);
+}
 
 .card > h2, p
 {
