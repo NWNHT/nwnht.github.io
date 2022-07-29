@@ -35,11 +35,11 @@
       fetch("/photography/photolist.json")
         .then( (response) => response.json())
         .then( (data) => {
-		generatePhotos(data.photos);
+		      generatePhotos(data.photos);
 	      })
-	.catch( (error) => {
-		console.error(error);
-		failedRetrieval();
+	      .catch( (error) => {
+		      console.error(error);
+		      failedRetrieval();
 	      });
 
       function failedRetrieval() {

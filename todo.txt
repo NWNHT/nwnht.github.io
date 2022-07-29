@@ -2,7 +2,6 @@ Todo:
 - Fix the link of the monogram?
   - sort out a monogram
 
-
 - Actually sort out the colours
 
 - A format for including files in project pages
@@ -11,13 +10,20 @@ Todo:
 
 - Sort out a better header and footer/format situation, not specified on each page
 
+- Format code and code blocks
+
+- Something for file downloads
+
 
 Projects:
 - This website
+- Memory Mangement in Python
 - Wordle
 - Lego World Map
 - Capstone
 - 3D Printing
+  - Organizer
+  - Wing
 - LED Strip
 
 

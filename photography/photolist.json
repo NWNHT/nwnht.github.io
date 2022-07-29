@@ -1,21 +1,21 @@
 {
 	"photos":	[{
-			"src":	"/photography/photos/1.jpeg",
+			"src":	"/photography/photos/0001.jpeg",
 			"alt":	"Reflections of trees off pond(9 Green).",
 			"caption":	"Left approach of 9 Green",
 			"identifier":	1
 		}, {
-			"src":	"/photography/photos/3.jpeg",
+			"src":	"/photography/photos/0003.jpeg",
 			"caption":	"",
 			"identifier":	2,
 			"alt":	"Pink flower in front of grass background."
 		}, {
-			"src":	"/photography/photos/5.jpeg",
+			"src":	"/photography/photos/0005.jpeg",
 			"alt":	"Interior of Notre-Dame Basilica of Montreal",
 			"caption":	"Notre-Dame Basilica of Montreal",
 			"identifier":	3
 		}, {
-			"src":	"/photography/photos/9.jpeg",
+			"src":	"/photography/photos/0009.jpeg",
 			"alt":	"Red pin on golf green(2 Green).",
 			"caption":	"SVGCC - Hole 2",
 			"identifier":	4
