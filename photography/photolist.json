@@ -1,7 +1,5 @@
 {
-	"photos":	
-	[
-		{
+	"photos":	[{
 			"src":	"/photography/photos/0001.jpeg",
 			"alt":	"2022-07-23 - Blue sky over 2 green.",
 			"caption":	"SVGCC - 2 Green",
@@ -119,8 +117,8 @@
 		}, {
 			"src":	"/photography/photos/0024.jpeg",
 			"alt":	"2022-06-17 - 2022 Montreal GP, grandstand 34.",
-			"caption":	"",
-			"identifier":	24
+			"identifier":	24,
+			"caption":	"Grand(stand 34) Prix du Canada"
 		}, {
 			"src":	"/photography/photos/0025.jpeg",
 			"alt":	"2022-07-08 - Hydrangea in the back yard.",
@@ -144,8 +142,8 @@
 		}, {
 			"src":	"/photography/photos/0029.jpeg",
 			"alt":	"2022-07-22 - 2020 Cube Acid at Kingswood Park.",
-			"caption":	"Taken on film so that I didn't have to clearn it first.",
-			"identifier":	29
+			"identifier":	29,
+			"caption":	"Taken on film so I didn't have to clean it first."
 		}, {
 			"src":	"/photography/photos/0030.jpeg",
 			"alt":	"2019-08-31 - Dragonfly at 3 tee.",
@@ -211,6 +209,5 @@
 			"alt":	"2022-07-22 - St. Albert Trestle Bridge.",
 			"caption":	"St. Albert Trestle Bridge",
 			"identifier":	42
-		}
-	]
+		}]
 }

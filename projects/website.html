@@ -26,11 +26,98 @@
       <h1>websites eh?</h1>
       <hr class="fade">
       <h3>Motivation</h3>
-      <p>I have delved into a few different technologies but have somehow been able to avoid learning anything about websites.  I would perform the occasional inspect element to avoid a paywall but other than that I was just thrown off by the immense number of tags. </p>
-      <p>Well I still don't actually <i>need</i> a website but it is just so in vogue to have one now so I might as well learn something and make one myself.</p>
-      <p>I figure that this is also a reasonable place to document some of the things I have learned and done, beginning with how to create a website.</p>
+      <p>I have worked on a few projects but I have somehow been able to avoid learning anything about websites.  I perform the occasional <i>inspect element</i> to avoid a paywall but other than that I have been completely naive to the complexities of creating, maintaining and hosting a website.  </p>
+      <p>While I could continue in my ignorance as I have no real need for a website, I have dedicated some time to learning the basics of web technologies.  This seems like a reasonable place as any to document some of the things I have learned.</p>
       <h3>Learning</h3>
-      <p></p>
+      <p>At the recommendation of a <a href="https://www.reddit.com/r/learnprogramming/comments/bn20hz/best_way_to_learn_htmlcss/">helpful reddit post</a>, I was led to the <a href="https://developer.mozilla.org/en-US/">MDN Web Docs</a>, specifically the <a href="https://developer.mozilla.org/en-US/docs/Learn">MDN Learning Area section</a>.  I have typically preferred lectures over written media for learning but this documentation is well structured and provides just enough information for the reader to create the basics and know how to learn more.</p>
+      <p>The guide has three introductory sections on HTML CSS, and JavaScript followed by more in-depth sections on specific topics like accessibility and the tools available for more complex web development.  I completed the first three sections over the course of a couple weeks and I find it extremely intersting how HTML and CSS combine to create dynamic webpages.  There is far less HTML involved in the complicated layouts and responsiveness than I expected but it is made up for with CSS.  The CSS of this website makes up roughly 40% of the code(by lines), even considering my verbose and likely repetitive CSS.  This was quite the revelation to me as I looked at the layers of inherited and overwritten CSS properties.</p>
+      <p>I stopped editing just above here.</p>
+      <p>This is all before even covering JavaScript and the abilities that it gives to update the website and so much more. I am not terribly interesting in delving into the full capabilities but I do find some of the basic DOM functionality intriguing.  If/when I decide to develop my website further this is the area that I will likely focus my efforts as it seems to be the way to enable the more advanced features of a webpage.</p>
+      <p>Beyond the MDN Web Docs, I spent many an hour googling how to correctly apply CSS and predictably <a href="https://stackoverflow.com/questions/114543/how-to-horizontally-center-an-element?">how to centre a div</a>.  Since there are basically only so many components that can be tastefully added to a website I have found that there are tutorials/full libraries that can be copied directly into your own website.  A lot of these features look cool but I wanted to build my website predominantly on my own even if the result is slightly underwhelming.</p>
+      <h3>Result</h3>
+      <p>The result of my web adventures should be clear, while humble, I consider it quite the success.  I don't consider myself a designer but I think that the structure is intuitive and navigation is clear.  The colour palette could use some work but overall the aesthetics are pleasing to me and they remain pleasing on a variety of screen sizes and shapes.</p>
+      <h3>Photography</h3>
+      <p>I enjoy taking the occasional photo - apparently I am particularly inspired by golf courses - so I decided to dedicate a page on this website to the display of some of my favourite photos.  I have set the photos to display a maximum width of 100% but also limited it to the size of the viewport so that a complete image can be displayed on a single screen.  I believe that this is the best balance of displaying the full size of the image and maintaining readability.  It allows easy viewing of the photos on reasonably sized devices but also expands to show the full resolution of the image on larger screens.</p>
+      <p>Soon after creating the photography page I discovered how much of a hassle it is to manually update the HTML of the page each time I wish to add a photograph.  I used my new found JavaScript skills to create a small script within the page to read the contents of a .json file as seen below.</p>
+      <pre><code>
+        fetch("/photography/photolist.json")
+          .then( (response) => response.json())
+          .then( (data) => {
+            generatePhotos(data.photos);
+          })
+          .catch( (error) => {
+            console.error(error);
+            failedRetrieval();
+          });
+
+        function failedRetrieval() {
+          document.querySelector("div.content > p").innerHTML 
+                                = "The photos did not load.";
+        }
+
+        function generatePhotos(photos) {
+          console.log("File read.");
+
+          const content = document.querySelector("body");
+          var photograph, caption;
+
+          for (const photo in photos) {
+            // Create and format image, append to body
+            photograph = document.createElement("img");
+            photograph.src = photos[photo].src;
+            photograph.alt = photos[photo].alt;
+
+            content.appendChild(photograph);
+
+            // Create caption
+            caption = document.createElement("h4");
+            caption.innerHTML = photos[photo].caption;
+
+            content.appendChild(caption);
+          }
+          const hr = document.createElement("hr");
+          hr.classList.add("fade");
+          content.appendChild(hr);
+        }
+      </code></pre>
+      <p>I am not sure how absolutely impressive it is but I am satisfied with the ability to generate the HTML without having to write it all myself.  The next issue is that it also isn't that convenient to manually edit the .json file...</p>
+      <p>This is the perfect opportunity to run away from web development and instead get confused by pointers.  In a tale as old as time I decided to save minutes fiddling with JSON by taking a few hours to write a program to add, remove, and edit the photo items in the JSON file.  Hopefully it is justifiable in the long run but if not, it was enjoyable to write.</p>
+      <p>The program reads the existing JSON file and then requests an action from the user: add photo, remove photo, edit photo, list photos, or quit the application.  The reading of the .json file is done using the cJSON library.  This library also provides a plethora of functions for modifying the JSON object once it has been parsed.</p>
+      <p>The options are displayed as in the menu below, then there are further opportunities for data input depending on the option.  Add, remove, and edit ask for some combination of the photo ientifier, src, alt, and caption while the 'List Photos' option simply lists the photos present in the JSON structure.  All of the actions are made to a JSON structure in memory and when the user is finished they select the 'Write and Quit' or 'Quit Without Saving option'.</p>
+      <pre><code>
+        Please choose an option:<br>
+          [ a ] - Add Photo<br>
+          [ r ] - Remove Photo<br>
+          [ e ] - Edit Photo<br>
+          [ l ] - List Photos<br>
+          [ s ] - Write and Quit<br>
+          [ q ] - Quit Without Saving<br>
+        Input:
+      </code></pre>
+      <p>The listing of photos is as below, the other paths are significantly less interesting.</p>
+      <pre><code>
+        ------------------------------------------<br>
+        Photos in 'photolist.json':<br>
+        Identifier: 1<br>
+        Caption: Left approach of 9 Green<br>
+        alt: Reflections of trees off pond(9 Green).<br>
+        src: /photography/photos/1.jpeg<br>
+        <br>
+        Identifier: 2<br>
+        Caption:  <br>
+        alt: Pink flower in front of grass background.<br>
+        src: /photography/photos/3.jpeg<br>
+        <br>
+        Identifier: 3<br>
+        Caption: Notre-Dame Basilica of Montreal<br>
+        alt: Interior of Notre-Dame Basilica of Montreal<br>
+        src: /photography/photos/5.jpeg<br>
+        ------------------------------------------</code></pre>
+        <p>The version of this program as of writing this article is included below.  It is worth noting that while this tool is not fragile, it has been designed with the consideration that I will be the only user so there is minimal input checking.  There also aren't many considerations for failing gracefully but at the end of the day the data isn't written until it is explicitly requested so loss of data is unlikely.</p>
+        <div class="download"><img src="/images/file-icon.png"><code>process-photo.c</code><a href="/photography/PhotoScripts/process-photo.c"><span></span></a></div>
+        <p>In summary, I enjoyed writing this tool, I am very thankful for the JSON library, and I hope to take enough photos to make the development of the tool worth it.  I think I will actually revisit this tool in the future to make it more robust and potentially include a couple other functions such as reordering of the photos or refactoring the indices as with enough photos added and removed they may get out of hand.</p>
+        <h3>Conclusion</h3>
+        <p>I have completed my task of learning the very basics of HTML, CSS, and JavaScript and at this point I am satisfied with the result.  I think I have succeeded in gaining a functional knowledge of the very basics and more importantly I now know what I don't know.  There are additional sections in the MDN Web Docs further covering client-side and server-side frameworks, I think that this will be the the area in which I focus any future investigation.  They seem necessary for the implementation of more complex websites.</p>
 
       <hr class="fade">
     </div>
