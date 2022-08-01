@@ -3,9 +3,12 @@
 {
   --light-background: #F3FCF8;
   /*--medium-background: #264653;*/
-  --medium-background: #2a5639;
+  /*--medium-background: #2a5639; */
+  --medium-background: #2c312c;
   --medium-background-fade: rgb(21, 137, 255, 0.8);
-  --dark-background: #1a3a1e;
+  --dark-background: #1c1d1c;
+  /* --dark-background: #1a3a1e; */
+  --code-background: rgb(52, 52, 52, 0.8);
   --accent: #fc5130;
   --accent: #01BAEF;
   --accent: #FC4603;
@@ -200,6 +203,21 @@ h4
   margin-bottom: 1rem;
 }
 
+/* || Code Blocks */
+
+pre
+{
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  display: inline-block;
+  padding-left: 1rem;
+  padding-right: 0;
+  margin-left: 2rem;
+  margin-right: 2rem;
+  width: calc(100% - 4rem);
+  background-color: var(--code-background);
+  border-radius: 9px;
+}
 
 /* || Link Formatting */
 

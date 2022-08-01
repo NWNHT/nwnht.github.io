@@ -192,8 +192,8 @@
 		}, {
 			"src":	"/photography/photos/0039.jpeg",
 			"alt":	"2022-06-20 - Montreal skyline from Mont Royal.",
-			"caption":	"Who named Mont Royal in Montreal?",
-			"identifier":	39
+			"identifier":	39,
+			"caption":	"Mont Royal skyline."
 		}, {
 			"src":	"/photography/photos/0040.jpeg",
 			"alt":	"2022-06-20 - Biodomes in Montreal.",
