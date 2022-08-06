@@ -26,6 +26,8 @@ Projects:
   - Wing
 - LED Strip
 
+Completed Projects:
+- website - Building the website
 
 Colours:
 - Make a neutral scheme with highlights/accent
