@@ -259,11 +259,25 @@ pre
 
 .fade {
   border-width: 0 0 2px;
-  margin-top: 1rem;
+  margin-top: 2rem;
   margin-bottom: 2rem;
   color: var(--text);
   border-image: linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%) 0 0 100%;
   border-style: solid;
+}
+
+.fade-left {
+  border-width: 0 0 2px;
+  margin-top: 0;
+  margin-bottom: 1.3rem;
+  color: var(--text);
+  border-image: linear-gradient(90deg,var(--accent) 0%, transparent 70%) 0 0 100%;
+  border-style: solid;
+  width: calc(100% - 4rem);
+}
+
+.proj {
+  margin-bottom: 0.2rem;
 }
 
 

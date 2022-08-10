@@ -5,11 +5,11 @@
 #xbar, #ybar
 { /* This sectino controls the cursor followers */
   position: fixed;
-  background-color: cyan;
+  background-color: var(--accent);
   top: 0;
   left: 0;
-  width: 10px;
-  height: 10px;
+  width: 6px;
+  height: 6px;
   z-index: 5;
 }
 

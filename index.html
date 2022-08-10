@@ -15,9 +15,9 @@
       function getCursorPosition(event) {
 	      var xPos = event.clientX
 	      var yPos = event.clientY
-	      document.getElementById("display").innerHTML = `x:${xPos} y:${yPos}`;
-	      document.getElementById("xbar").style.left = (xPos - 5) + 'px';
-	      document.getElementById("ybar").style.top = (yPos - 5) + 'px';
+	      document.getElementById("display").innerHTML = `Cursor Position: x:${xPos} y:${yPos}`;
+	      document.getElementById("xbar").style.left = (xPos - 3) + 'px';
+	      document.getElementById("ybar").style.top = (yPos - 3) + 'px';
 	    }
     </script>
   </head>
@@ -38,7 +38,7 @@
       </header>-->
       <div class="name">
 	<h2>Lucas Nieuwenhout</h2>
-	<h3 id="display">x: y:</h3>
+	<h3 id="display"></h3>
       </div>
       <nav class="menu-container">
 	<ul>
