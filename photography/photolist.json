@@ -66,9 +66,9 @@
 			"identifier":	13
 		}, {
 			"src":	"/photography/photos/0014.jpeg",
-			"alt":	"2022-07-22 - Duck(?) at Lois Hole Centennial Provincial Park.",
 			"caption":	"Duck(?) at Lois Hole Wetlands.",
-			"identifier":	14
+			"identifier":	14,
+			"alt":	"2022-07-22 - It's a Ruddy Duck apparently, Louis Hole Centennial Park."
 		}, {
 			"src":	"/photography/photos/0015.jpeg",
 			"alt":	"2022-07-22 - Hydrangea with blue sky backdrop.",
@@ -209,5 +209,10 @@
 			"alt":	"2022-07-22 - St. Albert Trestle Bridge.",
 			"caption":	"St. Albert Trestle Bridge",
 			"identifier":	42
+		}, {
+			"src":	"/photography/photos/0043.jpeg",
+			"alt":	"2022-08-07 - A good looking 10 green.",
+			"caption":	"SVGCC - 10 Green",
+			"identifier":	43
 		}]
 }
