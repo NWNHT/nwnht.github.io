@@ -5,8 +5,8 @@ import time
 
 # Define the categories
 CATEGORIES = {"􀙚": {1: "project1"},
-               "􀆔": {2: "project2", 3: "project3", 4: "project4"},
-               "􀑇": {5: "project5", 6: "project6", 7: "project7", 8: "project8"}}
+              "􀆔": {2: "project2", 3: "project3", 4: "project4"},
+              "􀑇": {5: "project5", 6: "project6", 7: "project7", 8: "project8"}}
 
 
 def get_data():
@@ -33,6 +33,7 @@ def get_data():
     # If there is a current time entry then add it to the data dictionary
     if current["data"] is not None:
         resp["data"].append({"pid": current["data"]["pid"], "dur": (int(time.time()) + current["data"]["duration"])*1000})
+
     return resp
 
 
@@ -59,6 +60,7 @@ def categorize_data(data):
 def main():
 
     # Try to retrieve the data and error out if it doesn't work
+    # This is so non-critical that in the event of some sort of failure it is no problem if I am without data for a few minutes
     try:
         data = get_data()
     except:

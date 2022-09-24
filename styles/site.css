@@ -162,7 +162,7 @@ border: var(--accent) solid 4px;
 
 /* || Text Formatting */
 
-p, h1, h2, h3, h4, ol, ul, li
+p, h1, h2, h3, h4, h5, ol, ul, li
 {
   margin-left: 2rem; margin-right: 2rem;
 }
@@ -172,7 +172,7 @@ p
   font-weight: 500;
 }
 
-h1, h2, h3, h4
+h1, h2, h3, h4, h5
 {
   font-family: 'Merriweather', serif;
   font-weight: 400;
@@ -196,6 +196,11 @@ h3
 h4
 {
   font-size: 1.25rem;
+}
+
+h5
+{
+  font-size: 1rem;
 }
 
 .page-title
@@ -287,6 +292,8 @@ img
 {
   display: block;
   max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 figure 
@@ -298,6 +305,12 @@ figcaption
 {
   margin-left: 4rem;
   margin-bottom: 2rem;
+}
+
+.swiftbar
+{
+  margin-left: auto;
+  margin-right: auto;
 }
 
 @media (min-width: 700px) {

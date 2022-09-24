@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="author" content="Lucas Nieuwenhout">
+    <meta name="description" content="Personal website of Lucas Nieuwenhout.">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#1A3A1E">
+    <link href="/styles/site.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com"> 
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> 
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400&family=Open+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div class="background"></div>
+    <div class="diagonal-overlay"></div>
+    <header>
+      <ul>
+	<li><a href="/projects.html">projects</a></li>
+	<li><a href="/photography.html">photography</a></li>
+	<li><a href="#">dead link</a></li>
+      </ul>
+      <a href="/" class="monogram"><p>ln.</p></a>
+    </header>
+    <div class="content">
+      <h1>Swiftbar and Toggl Track API</h1>
+      <hr class="fade">
+      <h3>Introduction</h3>
+      <p>One of my favourite aspects of macOS is the variety of utility applications and tools that are available through the app store or various repositories online.  With enough exploring, the combination of these utilities can fill in all the gaps of functionality not already implemented in the operating system.  Some of my favourites are:</p>
+      <ul>
+       <li><a href="https://github.com/davidwernhart/AlDente">Aldente</a> - Limit and control charging</li>
+       <li><a href="https://github.com/MonitorControl/MonitorControl#readme">MonitorControl</a> - Control LG displays</li>
+       <li><a href="https://apps.apple.com/ca/app/amphetamine/id937984704?mt=12">Amphetamine</a> - Control sleep and wake</li>
+       <li><a href="https://topnotch.app">TopNotch</a> - Modify displays with notches</li>
+       <li><a href="http://www.bresink.com/osx/TinkerTool.html">TinkerTool</a> - Expose hidden settings</li>
+       <li><a href="https://bjango.com/mac/istatmenus/">iStatMenus</a> - A menubar system monitor</li>
+       <li><a href="https://apps.apple.com/ca/app/hidden-bar/id1452453066?mt=12">Hidden Bar</a> - A utility to hide menubar items</li>
+      </ul>
+      <p>However, one of the most extensible of these utilities is <a href="https://github.com/swiftbar/SwiftBar">Swiftbar</a>, a program for creating your own custom menubar items generated from the output of shell scripts.  This is an evolution/rewrite of the popular utility <a href="https://github.com/matryer/xbar-plugins?from=getbitbar.com&dest=">Bitbar</a>, but written entirely in Swift and under active development.</p>
+
+      <h3>Swiftbar</h3>
+      <p>Swiftbar can be downloaded from the GitHub page or through Homebrew using `brew install swiftbar`.  There is also a plugin library available in application to browse plugins written by others.</p>
+      <p>The basic premise of the program is writing scripts that will output text and other symbols to be placed in the menubar.  There are a number of ways to complicate things but the simplest implementation is a finite-time script printing to stdout to be run on an interval.  All scripts are placed in a specified plugin folder with the interval encoded into the plugin name, exposing them to Swiftbar.</p>
+      <p>One of the most enabling features of swiftbar is that it is completely language agnostic for the shell scripts with which you want to generate the output, it will just run what it finds in its plugin directory and place its output in the menubar.  Swiftbar initializes an environment with some additional environment variables to provide some hooks for system and Swiftbar information.  Additionally, the output to the menubar is parsed for Swiftbar specific text formatting, visual, and action parameters to further customize the presentation and functionality of the menubar item.  The utility provides tremendous utility even without these options but description and examples of these variables and parameters are available in the <a href="https://github.com/swiftbar/SwiftBar/blob/main/README.md">Swiftbar readme</a>.</p>
+
+      <h3>Time Tracking and Toggl</h3>
+      <p>Now onto my use for Swiftbar.</p>
+      <p>I hope to elaborate on my use of time tracking in another article, but to summarize, it is an extremely helpful tool for gathering objective/reliable data about how your time is spent.  It allows you to make (theoretically) reliable and powerful insights about what you do with your time, and as it is one of the most limited resources most people have, I think this is a worthy venture.</p>
+      <p>However, beyond just creating a database of how my time is spent, the data also has to be accessible and visible for it to have a chance to effect change.  There is a lot of value in the data aggregated from a long time span but equally as valuable to me is the data for the current day so that I can keep track of how I have actually spent my day.  I use the <a href="https://toggl.com/track/">Toggl Track</a> service to track my time as well as an app <a href="https://timeryapp.com">Timery</a> created as a companion for it but I found their interfaces sub-optimal for summarizing a day's activities.  Additionally, it requires that I run an extra application or always have a webpage visible just to be able to see the totals for the current day.</p>
+      <p>One of the pitfalls of time tracking is trying to be too granular about it, when collecting data and when presenting/interpretting data.  Time tracking with too much specificity can turn into a lot of work and trying to visualize all of that information can just lead to a mess depending on how the data is structured.  As a solution to this I created a Swiftbar plugin that accesses the <a href="https://developers.track.toggl.com/docs/">Toggl API</a> to retrieve all time entries for the day(including any currently running) and categorize them into three groups that I find insightful.</p>
+
+      <figure>
+	      <img src="/projects/swiftbar/assets/Swiftbar_example.png" alt="another image"> <figcaption class="swiftbar">An example of the Swiftbar item display</figcaption>
+      </figure>
+
+      <p>The three categories I have landed upon can be loosely described as "work", "productive", and "entertainment".  This is not granular enough to make life changing decisions over but it is helpful in recalling and assessing how I actually spent my day.  If you feel that you have spent all day working then this tool can quickly validate or (more importantly) invalidate this idea.</p>
+
+      <h3>The Script</h3>
+      <p>Toggl provides quite a generous API with plenty of detailed information about each time entry and allowance for a minimum call rate of 1 request per second.  My script only runs once every few minutes and throws away most of the information provided but the full function of the API is appreciated and may be useful in the future for any future time tracking projects.</p>
+      <p>My script uses the v2 API for collecting all completed time entries from the current date as well as the v8 API for retrieving the currently running time entry if one is running.  An earlier version of this script only tracked completed entries but with long time entries the menubar item would become increasingly inaccurate until the time entry was completed/closed and the displayed values changed abruptly.</p>
+      <p>The script combines the completed and ongoing entries and strips away all data except the duration and project id.  This resulting data is then further aggregated into the categories defined in a dictionary included in the script.  This parsing could all be done much more simply using a pandas dataframe but I don't think it is worth the import for the small amount of data cleaning required.</p>
+      <p>Finally, the sum of the logged minutes for each category is just printed out for Swiftbar to display.  I experimented with spicing up the display and formatting of the output but have settled on a minimal look to allow it to blend in with other menubar items.</p>
+      <p>The full script is available for download below:</p>
+
+      <div class="download clickable-div">
+        <img src="/images/file-icon.png">
+        <code>Swiftbar_x_Toggl.py</code>
+        <a class="clickable-div-span" href="/projects/swiftbar/assets/Swiftbar_x_Toggl.py" download><span></span></a>
+      </div>
+
+      <h3>Improvements / What's Next</h3>
+      <p>I appreciate the functionality that Swiftbar exposes and I use it to implement my time tracking script every single day to track the time that I have actually spent working, being productive, or otherwise.  I think that I have struck a useful level of data visualization in the menubar. Any more data would take too long to parse, any less data and it would lose its ability to provide insight.  As the tool is working well right now I will likely leave it untouched until something inevitably breaks and at that point I will update to the latest Toggl API and consolidate the two API calls into one if possible.</p>
+      <p>While this time tracking menubar item is meeting all my needs in its current form, there are many things that can be displayed in the menubar and Swiftbar is the right tool to create a glanceable, always visible dashboard customized to each users needs and priorities.  I suspect that any items I build in the future will have a similar structure to my time tracking item, accessing public APIs to pull data together that would otherwise have to be searched out.  </p>
+    
+      <hr class="fade">
+    </div>
+  </body>
+</html>
