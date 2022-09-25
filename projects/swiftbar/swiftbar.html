@@ -39,7 +39,7 @@
       <p>However, one of the most extensible of these utilities is <a href="https://github.com/swiftbar/SwiftBar">Swiftbar</a>, a program for creating your own custom menubar items generated from the output of shell scripts.  This is an evolution/rewrite of the popular utility <a href="https://github.com/matryer/xbar-plugins?from=getbitbar.com&dest=">Bitbar</a>, but written entirely in Swift and under active development.</p>
 
       <h3>Swiftbar</h3>
-      <p>Swiftbar can be downloaded from the GitHub page or through Homebrew using `brew install swiftbar`.  There is also a plugin library available in application to browse plugins written by others.</p>
+      <p>Swiftbar can be downloaded from the GitHub page or through Homebrew using <code>brew install swiftbar</code>.  There is also a plugin library available in application to browse plugins written by others.</p>
       <p>The basic premise of the program is writing scripts that will output text and other symbols to be placed in the menubar.  There are a number of ways to complicate things but the simplest implementation is a finite-time script printing to stdout to be run on an interval.  All scripts are placed in a specified plugin folder with the interval encoded into the plugin name, exposing them to Swiftbar.</p>
       <p>One of the most enabling features of swiftbar is that it is completely language agnostic for the shell scripts with which you want to generate the output, it will just run what it finds in its plugin directory and place its output in the menubar.  Swiftbar initializes an environment with some additional environment variables to provide some hooks for system and Swiftbar information.  Additionally, the output to the menubar is parsed for Swiftbar specific text formatting, visual, and action parameters to further customize the presentation and functionality of the menubar item.  The utility provides tremendous utility even without these options but description and examples of these variables and parameters are available in the <a href="https://github.com/swiftbar/SwiftBar/blob/main/README.md">Swiftbar readme</a>.</p>
 
@@ -50,7 +50,7 @@
       <p>One of the pitfalls of time tracking is trying to be too granular about it, when collecting data and when presenting/interpretting data.  Time tracking with too much specificity can turn into a lot of work and trying to visualize all of that information can just lead to a mess depending on how the data is structured.  As a solution to this I created a Swiftbar plugin that accesses the <a href="https://developers.track.toggl.com/docs/">Toggl API</a> to retrieve all time entries for the day(including any currently running) and categorize them into three groups that I find insightful.</p>
 
       <figure>
-	      <img src="/projects/swiftbar/assets/Swiftbar_example.png" alt="another image"> <figcaption class="swiftbar">An example of the Swiftbar item display</figcaption>
+	      <img src="/projects/swiftbar/assets/Swiftbar_example.png" alt="another image"> <figcaption class="swiftbar">An example of the Swiftbar item display showing minutes spent in my three categories</figcaption>
       </figure>
 
       <p>The three categories I have landed upon can be loosely described as "work", "productive", and "entertainment".  This is not granular enough to make life changing decisions over but it is helpful in recalling and assessing how I actually spent my day.  If you feel that you have spent all day working then this tool can quickly validate or (more importantly) invalidate this idea.</p>
