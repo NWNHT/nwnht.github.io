@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Created with Vectornator (http://vectornator.io/) -->
+<svg height="100%" stroke-miterlimit="10" style="fill-rule:nonzero;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;" version="1.1" viewBox="0 0 256 256" width="100%" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs/>
+<g id="Untitled">
+<path d="M64 88L16 128L64 168" fill="none" opacity="1" stroke="#ecffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="24"/>
+<path d="M192 88L240 128L192 168" fill="none" opacity="1" stroke="#ecffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="24"/>
+<path d="M160 40L96 216" fill="none" opacity="1" stroke="#ecffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="24"/>
+</g>
+</svg>
