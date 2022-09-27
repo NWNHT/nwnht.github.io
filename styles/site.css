@@ -281,7 +281,13 @@ pre
   width: calc(100% - 4rem);
 }
 
-.proj {
+.proj 
+{
+  margin-bottom: 0.2rem;
+}
+
+.cyc_head
+{
   margin-bottom: 0.2rem;
 }
 
