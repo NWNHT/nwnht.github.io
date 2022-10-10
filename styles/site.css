@@ -327,6 +327,17 @@ figcaption
   }
 }
 
+/* || Tables */
+
+table
+{
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+  margin: 0, 2rem;
+  background-color: var(--code-background);
+}
+
 /* || File Download */
 
 .download {
@@ -398,4 +409,16 @@ figcaption
   animation-timing-function: linear;
   -webkit-animation-iteration-count: infinite;
   animation-iteration-count: infinite;
+}
+
+/* || Code */
+
+.hljs-keyword, .hljs-string, .hljs-number
+{
+  color: var(--accent)
+}
+
+.hljs-comment
+{
+  color: var(--link-hover)
 }
