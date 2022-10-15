@@ -1,0 +1,481 @@
+<!DOCTYPE HTML>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="author" content="Lucas Nieuwenhout">
+    <meta name="description" content="Personal website of Lucas Nieuwenhout.">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#1c1d1c">
+    <link href="/styles/site.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com"> 
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> 
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400&family=Open+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div class="background"></div>
+    <div class="diagonal-overlay"></div>
+    <header>
+      <ul>
+        <li><a href="/projects.html">projects</a></li>
+        <li><a href="/photography.html">photography</a></li>
+        <li><a href="/cycling.html">cycling</a></li>
+      </ul>
+      <a href="/" class="monogram"><p>ln.</p></a>
+    </header>
+    <div class="content">
+
+      <h1>Strava Data and API</h1>
+      <hr class="fade">
+
+      <h3 class="proj">My Fitness Journey if anyone cares?</h3>
+      <hr class="fade-left">
+      <p>I played a variety of team sports through grade school and I really enjoyed it.  I was never particularly good at any of the sports but my height gave me an advantage in most sports and I was able to capitalize on that.  However, there was the great benefit of getting out of class and going to another school for a tournament or game.</p>
+      <p>When I went to university I knew I wasn't good enough to succeed on any of the university teams so I stopped much of my activity in favour of focussing on academics.  I continued to not do any activity until my <a href="https://www.athabascau.ca" title="Athabasca University">first work placement</a> in Athabasca, AB where it was so boring that I started running just for something to do.  I am no endurance athlete but I reveled in the allure of running faster or further than the day before.  After overcoming the initial pains of running I looked forward to each of my morning runs and getting the chance to improve my times.  This was abruptly ended when I simultaneously developed knee pain and had to go back to university after my placement.</p>
+      <p>I didn't do much activity after that but working at a golf course in the summer kept me reasonably active.</p>
+      <p>Then the pandemic hit and being stuck inside all day drove me to dust off my bicycle.  This is where I really hit my stride as it allowed me to chase improvements while doing less damage than running.  After a few hundred kilometers on the bicycle I purchased eight year prior I purchased a new bicycle and I have cycled thousands of kilometers in the past few seasons.</p>
+      <p>I have grabbed <a href="https://www.strava.com/athletes/56778178/segments/leader" title="My Strava KOMs">a few KOMs</a> and more importantly seen great improvements in my speed and fitness with exception of a couple incidents with a car and some strewn leaves.</p>
+
+      <h3 class="proj">Strava</h3>
+      <hr class="fade-left">
+      <p>I began recording my workouts with the <a href="https://apps.apple.com/us/app/fitness/id1208224953" title="App Store link">Apple Fitness App</a> as I just needed a place to record my times and distances.  As I got more serious about my times and tracking my progress I switched to <a href="https://www.strava.com/dashboard" title="Strava dashboard">Strava</a> for its greater surfacing of statistics as well as the tracking of segments, short 'user created' routes where the best efforts and times are recorded and displayed.  I don't focus on segments but it can provide some additional motivation to push for a stretch and try to top the charts.</p>
+      <p>Strava also offers a <a href="strava subscription cancel" title="Strava subscription">subscription service</a> which will further analyze your activities and tell you some stuff about them.  However, the more interesting service provided by Strava is their <a href="https://developers.strava.com" title="Strava developer page">API</a>.</p>
+
+      <h3 class="proj">Strava API</h3>
+      <hr class="fade-left">
+      <p>The Strava API is actually quite annoying to set up in my experience, it required the assistance of multiple <a href="https://www.youtube.com/watch?v=sgscChKfGyg" title="Intro and Accessing Strava API with Postman - Strava API for Beginners">videos</a> and <a href="https://towardsdatascience.com/using-the-strava-api-and-pandas-to-explore-your-activity-data-d94901d9bfde" title="Using Python to Explore Strava Activity Data - Matt Ambrogi">articles</a> from <a href="https://developers.strava.com/docs/authentication/" title="Strava authentication documentation">Strava</a> and <a href="https://levelup.gitconnected.com/add-strava-oauth2-login-to-your-react-app-in-15-minutes-6c92e845919e" title="Add Strava OAuth2 Login to your React App in 15 Minutes - Jack Joseph">others</a> to properly configure the permissions and retrieve the authorization token.  Thankfully once the correct access token is received you are able to continue using the API with the access and refresh tokens.  </p>
+      <p>The rate limit on the API is alright but not exceedingly generous.  It allows 100 calls every 15 minutes with a maximum of 1000 calls a day.  This is sufficient for single sessions but many users have hundreds of activities and analysis requiring aggregate data will have to be rationed out to abide by the API limits.  </p>
+      <p>After the confusing setup process the API is well documented and provides a wide variety of endpoints for data of different forms.  The most useful for the information I want are <code><a href="https://developers.strava.com/docs/reference/#api-Activities-getLoggedInAthleteActivities" title="Strava documentation">/athlete/activities</a></code> and <code><a href="https://developers.strava.com/docs/reference/#api-Activities-getActivityById" title="Strava documentation">/activities</a></code>, providing a paginated list of all activities by an athlete and a detailed view of a specific activity respectively.</p>
+      <p>Due to the rate limitations of the API(and just for fun), I wrote a caching system for the activity stream requests.  I can then limit the number of requests to Strava, especially during development where I am making quite the number of requests.  The cache is checked before any request to the Strava API and the API is only called if the activity stream is not found.  The cached data is marked with a date but as the activities are extremely static there is currently no expiration mechanism implemented.  For edge cases there is an option to force a request to the API and the cache can be cleaned of old activities whenever required.</p>
+      
+      <h3 class="proj">Plotting with <code>ggplot2</code>/<code>plotnine</code></h3>
+      <hr class="fade-left">
+      <p>I have previously conducted some data analysis in <a href="https://www.r-project.org" title="R Project">R</a> and I really enjoyed the <a href="https://www.jstatsoft.org/article/view/v059i10" title="Tidy Data Paper">Tidy Data</a> philosophy/system, especially the <a href="https://ggplot2.tidyverse.org" title="ggplot2 documentation">ggplot2 package</a> which is built on a <a href="https://www.amazon.com/Grammar-Graphics-Statistics-Computing/dp/0387245448/ref=as_li_ss_tl" title="The Grammer of Graphics - Leland Wilkinson">grammer of graphics</a>.  Luckily, there is a Python port of this package called <a href="https://github.com/has2k1/plotnine" title="Plotnine">plotnine</a>.  This package uses the grammer of graphics to stack plot elements atop eachother and build the graphic.  This provides an easy system to create complex graphics from Pandas dataframes.</p>
+      <p>The basic construction is a ggplot object specifying the source of the data in a dataframe followed by encodings through aesthetics and geometric objects to show the data.  I have previously used this for standard plots as well as visualizing <a href="https://www.lego.com/en-ca/product/world-map-31203?gclid=Cj0KCQjwhY-aBhCUARIsALNIC05JKq3BJ-LzWgVEmYb-I2VCyDPuSYd2Rqr2ukPxh9Bo6IPb9niCMncaArWYEALw_wcB&ef_id=Cj0KCQjwhY-aBhCUARIsALNIC05JKq3BJ-LzWgVEmYb-I2VCyDPuSYd2Rqr2ukPxh9Bo6IPb9niCMncaArWYEALw_wcB:G:s&s_kwcid=AL!790!3!524411174576!e!!g!!lego%20world%20map!13274100699!124140779978&Buffer&cmp=KAC-INI-GOOGUS-GO-CA-EN-RE-PS-BUY-CREATE-ART-SHOP-BP-EX-RN-WORLD_MAP" title="Lego set 31203">Lego world map</a> <a href="https://github.com/NWNHT/LegoWorldMap" title="Github repo for my Lego world map project">patterns</a>.</p>
+      <pre><code>
+<span class="hljs-keyword">from</span> pandas <span class="hljs-keyword">import</span> Categorical, DataFrame
+<span class="hljs-keyword">import</span> plotnine as gg
+<span class="hljs-keyword">from</span> random <span class="hljs-keyword">import</span> randrange
+
+<span class="hljs-comment"># Create dataframe</span>
+dataframe = DataFrame(data = {<span class="hljs-string">"column1"</span>: list(range(<span class="hljs-number">10</span>))
+                                 <span class="hljs-string">"column2"</span>: list(range(<span class="hljs-number">10</span>)),
+                                 <span class="hljs-string">"column3"</span>: [<span class="hljs-number">0</span>, <span class="hljs-number">1</span>] * <span class="hljs-number">5</span>,
+                                 <span class="hljs-string">"column4"</span>: [randrange(start=<span class="hljs-number">0</span>, stop=<span class="hljs-number">10</span>) <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> range(<span class="hljs-number">10</span>)]})
+dataframe[<span class="hljs-string">"column3"</span>] = Categorical(dataframe.column3)
+
+<span class="hljs-comment"># Create plot</span>
+plot = gg.ggplot(dataframe, gg.aes(x=<span class="hljs-string">"column1"</span>, y=<span class="hljs-string">"column2"</span>, colour=<span class="hljs-string">"column3"</span>)) <span class="hljs-string">\</span>
+    + gg.geom_point(size=<span class="hljs-number">2</span>) <span class="hljs-string">\</span>
+    + gg.geom_line(gg.aes(y=<span class="hljs-string">"column4"</span>), colour=<span class="hljs-string">"red"</span>, size=<span class="hljs-number">1.5</span>) <span class="hljs-string">\</span>
+    + gg.scale_colour_manual(values=[<span class="hljs-string">"blue"</span>, <span class="hljs-string">"orange"</span>], guide=False) <span class="hljs-string">\</span>
+    + gg.theme_light() <span class="hljs-string">\</span>
+    + gg.theme(figure_size=(<span class="hljs-number">10</span>, <span class="hljs-number">5</span>), 
+               text=gg.element_text(size=<span class="hljs-number">12</span>))
+
+<span class="hljs-built_in">print</span>(dataframe)
+<span class="hljs-built_in">print</span>(plot)
+      </code></pre>
+      <p>Output:</p>
+      <pre><code>
+   column1  column2 column3  column4
+0        0        0       0        6
+1        1        1       1        6
+2        2        2       0        8
+3        3        3       1        2
+4        4        4       0        2
+5        5        5       1        8
+6        6        6       0        0
+7        7        7       1        5
+8        8        8       0        3
+9        9        9       1        6
+      </code></pre>
+      <img src="/projects/strava_plotting/assets/plotnine_example.png" alt="Plotnine example.">
+      <ul>
+        <li>The above shows the creation of a point and line plot on a single figure.  The <code>ggplot()</code> function takes the dataframe upon which the plot will be based and 'global' aesthetics can be set.</li>
+        <li>Two geometries, <code>geom_point()</code> and <code>geom_line()</code>, are added.  <code>geom_line()</code> specifies its own y aesthetic.</li>
+        <li>The theme is set to a built-in light theme and then theme elements figure_size and text are overwritten with desired values.</li>
+        <li>In this case the 'column1' could be excluded as it is identical to the index and the x aesthetic can be set to <code>dataframe.index</code>.</li>
+      </ul>
+      <p>One of the great things about the grammar of graphics approach is the ability to create sets of elements that can be added to many plots without rewriting it all.  I implemented a theme of sorts by creating a <code>PlotTheme</code> class which can be set to light or dark and is applied to all plots.</p>
+      <code><pre>
+class PlotTheme:
+  def __init__(self, mode=False):
+     # True for dark mode, False for light
+     self.mode = mode
+     self.text = self.background 
+               = self.velocity 
+               = self.heartrate 
+               = self.altitude 
+               = self.yint 
+               = self.strip = None
+     if mode:
+         self.dark()
+     else:
+         self.light()
+
+  def dark(self):
+     self.text = light
+     self.background = dark
+     self.velocity = "cyan"
+     self.heartrate = stred
+     self.altitude = "lightgray"
+     self.yint = "gray"
+     self.strip = "gray"
+
+  def light(self):
+     self.text = dark
+     self.background = light
+     self.velocity = "blue"
+     self.heartrate = stred
+     self.altitude = "gray"
+     self.yint = "gray"
+     self.strip = "gray"
+
+  def gg_theme(self):
+     return gg.theme_light() 
+     + gg.theme(text=gg.element_text(color=self.text, size=40),
+                axis_title_x=gg.element_text(size=60),
+                axis_title_y=gg.element_text(size=60),
+                figure_size=(30, 20),
+                strip_background=gg.element_rect(fill=self.strip),
+                plot_background=gg.element_rect(fill=self.background),
+                panel_background=gg.element_rect(fill=self.background),
+                panel_grid=gg.element_line(color=self.text),
+                panel_grid_minor=gg.element_line(color=self.text))
+      </pre></code>
+      <p>Continuing from <code>plotnine</code> example:</p>
+      <pre><code>
+from strava<span class="hljs-selector-class">.plotting</span><span class="hljs-selector-class">.strava_stream_plots</span> 
+
+import PlotTheme
+
+pt = PlotTheme()
+pt.dark()
+
+<span class="hljs-function"><span class="hljs-title">print</span><span class="hljs-params">(plot + pt.gg_theme()</span></span>)
+      </code></pre>
+      <img src="/projects/strava_plotting/assets/plotnine_example_theme.png" alt="Plotnine example with Theme.">
+
+      <a id="result-tables"><h3 class="proj">Results</h3></a>
+      <hr class="fade-left">
+      <p>The aspects of the Strava data I find most interesting are how my heartrate reacts over a single ride and the evolution of my performance over the few years that I have been cycling.  The macro performance can be derived from the <code>/athlete/activities</code> data and the detailed heartrate data can be requested from the <code>/activities</code> data.  For these example plots we will be looking at my longest ride to date, a <a href="https://www.strava.com/activities/7830749817" title="Strava activity">59km ride</a> on September 18<sup>th</sup>, 2022.</p>
+      <p>A sample of the <code>/activities</code> response.</p>
+      <table>
+        <tr>
+          <th>resource_state</th>
+          <th>name</th>
+          <th>distance</th>
+          <th>moving_time</th>
+          <th>elapsed_time</th>
+          <th>total_elevation_gain</th>
+          <th>type</th>
+          <th>sport_type</th>
+          <th>workout_type</th>
+          <th>id</th>
+          <th>start_date</th>
+          <th>start_date_local</th>
+          <th>timezone</th>
+          <th>utc_offset</th>
+          <th>location_city</th>
+          <th>location_state</th>
+          <th>location_country</th>
+          <th>achievement_count</th>
+          <th>kudos_count</th>
+          <th>comment_count</th>
+          <th>athlete_count</th>
+          <th>photo_count</th>
+          <th>trainer</th>
+          <th>commute</th>
+          <th>manual</th>
+          <th>private</th>
+          <th>visibility</th>
+          <th>flagged</th>
+          <th>gear_id</th>
+          <th>start_latlng</th>
+          <th>end_latlng</th>
+          <th>average_speed</th>
+          <th>max_speed</th>
+          <th>has_heartrate</th>
+          <th>average_heartrate</th>
+          <th>max_heartrate</th>
+          <th>heartrate_opt_out</th>
+          <th>display_hide_heartrate_option</th>
+          <th>elev_high</th>
+          <th>elev_low</th>
+          <th>upload_id</th>
+          <th>upload_id_str</th>
+          <th>external_id</th>
+          <th>from_accepted_tag</th>
+          <th>pr_count</th>
+          <th>total_photo_count</th>
+          <th>has_kudoed</th>
+          <th>athlete.id</th>
+          <th>athlete.resource_state</th>
+          <th>map.id</th>
+          <th>map.summary_polyline</th>
+          <th>map.resource_state</th>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>Afternoon Ride</td>
+          <td>42820.4</td>
+          <td>5501</td>
+          <td>5786</td>
+          <td>267.7</td>
+          <td>Ride</td>
+          <td>Ride</td>
+          <td>nan</td>
+          <td>7928110779</td>
+          <td>2022-10-07T19:44:16Z</td>
+          <td>2022-10-07T13:44:16Z</td>
+          <td>(GMT-07:00) America/Edmonton</td>
+          <td>-21600.0</td>
+          <td>None</td>
+          <td>None</td>
+          <td>None</td>
+          <td>2</td>
+          <td>0</td>
+          <td>0</td>
+          <td>1</td>
+          <td>0</td>
+          <td>False</td>
+          <td>False</td>
+          <td>False</td>
+          <td>False</td>
+          <td>everyone</td>
+          <td>False</td>
+          <td>b7151693</td>
+          <td>[45.50966551898074, -73.52792169310909]</td>
+          <td>[45.50966551898074, -73.52792169310909]</td>
+          <td>7.784</td>
+          <td>14.578</td>
+          <td>True</td>
+          <td>171.5</td>
+          <td>192.0</td>
+          <td>False</td>
+          <td>True</td>
+          <td>694.2</td>
+          <td>650.1</td>
+          <td>8476205946.0</td>
+          <td>8476205946</td>
+          <td>D0D89D9C-E187-4BD3-B9B9-A3B2F285D7B7-activity.fit</td>
+          <td>False</td>
+          <td>0</td>
+          <td>0</td>
+          <td>False</td>
+          <td>56778178</td>
+          <td>1</td>
+          <td>a7928110779</td>
+          <td>Polyline removed for brevity</td>
+          <td>2</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>Morning Ride</td>
+          <td>15448.7</td>
+          <td>2053</td>
+          <td>2073</td>
+          <td>78.0</td>
+          <td>Ride</td>
+          <td>Ride</td>
+          <td>nan</td>
+          <td>7916199658</td>
+          <td>2022-10-05T16:02:59Z</td>
+          <td>2022-10-05T10:02:59Z</td>
+          <td>(GMT-07:00) America/Edmonton</td>
+          <td>-21600.0</td>
+          <td>None</td>
+          <td>None</td>
+          <td>None</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>1</td>
+          <td>0</td>
+          <td>False</td>
+          <td>False</td>
+          <td>False</td>
+          <td>False</td>
+          <td>everyone</td>
+          <td>False</td>
+          <td>b7151693</td>
+          <td>[37.23086745943844, -8.630392914231805]</td>
+          <td>[37.23086745943844, -8.630392914231805]</td>
+          <td>7.525</td>
+          <td>15.918</td>
+          <td>True</td>
+          <td>165.2</td>
+          <td>184.0</td>
+          <td>False</td>
+          <td>True</td>
+          <td>694.2</td>
+          <td>652.7</td>
+          <td>8462743743.0</td>
+          <td>8462743743</td>
+          <td>9F8E1E2E-9E72-4AA7-835B-5DEAB0819004-activity.fit</td>
+          <td>False</td>
+          <td>0</td>
+          <td>0</td>
+          <td>False</td>
+          <td>56778178</td>
+          <td>1</td>
+          <td>a7916199658</td>
+          <td>Polyline removed for brevity</td>
+          <td>2</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>Afternoon Ride</td>
+          <td>36290.3</td>
+          <td>4682</td>
+          <td>4860</td>
+          <td>173.7</td>
+          <td>Ride</td>
+          <td>Ride</td>
+          <td>nan</td>
+          <td>7912211536</td>
+          <td>2022-10-04T19:24:22Z</td>
+          <td>2022-10-04T13:24:22Z</td>
+          <td>(GMT-07:00) America/Edmonton</td>
+          <td>-21600.0</td>
+          <td>None</td>
+          <td>None</td>
+          <td>None</td>
+          <td>1</td>
+          <td>0</td>
+          <td>0</td>
+          <td>1</td>
+          <td>0</td>
+          <td>False</td>
+          <td>False</td>
+          <td>False</td>
+          <td>False</td>
+          <td>everyone</td>
+          <td>False</td>
+          <td>b7151693</td>
+          <td>[52.38876040406538, 4.5406777344509335]</td>
+          <td>[52.38876040406538, 4.5406777344509335]</td>
+          <td>7.751</td>
+          <td>13.028</td>
+          <td>True</td>
+          <td>163.1</td>
+          <td>183.0</td>
+          <td>False</td>
+          <td>True</td>
+          <td>694.2</td>
+          <td>652.7</td>
+          <td>8458270931.0</td>
+          <td>8458270931</td>
+          <td>100A2072-C195-4872-9F8B-B2A9EAB4F479-activity.fit</td>
+          <td>False</td>
+          <td>0</td>
+          <td>0</td>
+          <td>False</td>
+          <td>56778178</td>
+          <td>1</td>
+          <td>a7912211536</td>
+          <td>Polyline removed for brevity</td>
+          <td>2</td>
+        </tr>
+      </table>
+      <p>A sample of the <code>/athlete/activities</code> response.</p>
+      <table>
+        <tr>
+          <th>moving</th>
+          <th>velocity_smooth</th>
+          <th>distance</th>
+          <th>altitude</th>
+          <th>heartrate</th>
+          <th>time</th>
+        </tr>
+        <tr>
+          <td>False</td>
+          <td>0.000</td>
+          <td>3.7</td>
+          <td>692.2</td>
+          <td>122</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td>True</td>
+          <td>1.132</td>
+          <td>6.0</td>
+          <td>693.6</td>
+          <td>122</td>
+          <td>2</td>
+        </tr>
+        <tr>
+          <td>True</td>
+          <td>1.509</td>
+          <td>8.2</td>
+          <td>693.7</td>
+          <td>122</td>
+          <td>3</td>
+        </tr>
+      </table>
+
+      <h4 class="proj">Streams</h4>
+      <hr class="fade-left">
+      <p>The Strava API allows you to request a number of streams from an activity so I took the heartrate, velocity, and altitude.  These are normalized and combined to produce the summary plot below.  Altitude in gray, velocity in cyan and heartrate in Strava orange/red.</p>
+      <img src="/projects/strava_plotting/assets/stream_summary.png" alt="Summary Plot">
+      <hr class="fade">
+      <p>The plots below show heartrate and velocity data separately, with altitude for reference.</p>
+      <img src="/projects/strava_plotting/assets/heartrate_plot.png" alt="Heartrate Plot">
+      <hr class="fade">
+      <img src="/projects/strava_plotting/assets/velocity_plot.png" alt="Speed Plot">
+      <hr class="fade">
+
+      <p>The raw data produced from the rides is quite difficult to read due to the inaccuracy of the Apple Watch GPS as well as the natural high variance in speed during my ride as I slow for people or sharp corners.  For this reason I have applied a rolling average of various width to the altitude, heartrate, and velocity datasets.  This results in a more pleasant visual but comes with the downside of dulling the peaks and valleys.</p>
+      <p>The distribution of the raw speed data can be seen in the histogram below.  The highest reading exceeds 65km/h but reviewing the distribution it is likely I only achieved speeds up to 50km/h and only for brief periods.  For this reason I believe that the rolling average actually provides a more accurate view.</p>
+      <img src="/projects/strava_plotting/assets/speed_histogram.png">
+      <hr class="fade">
+
+      <p>Beyond just displaying the heartrate and velocity streams, I saw that Strava offers <a href="https://support.strava.com/hc/en-us/articles/216917077-Heart-Rate-Zones" title="Strava heartrate zones article">analysis of heartrate zones</a>.  These are heartrate ranges relative to your maximum heartrate and have become a common way to categorize effort and intensity of workouts.  The figure below shows my heartrate in a line as well as the heartrate zone represented by the background colour.  </p>
+      <img src="/projects/strava_plotting/assets/heartrate_zone_plot.png" alt="Heartrate Zone Plot">
+      <hr class="fade">
+
+      <p>To anyone familiar with heartrate zones it should be clear that I don't put much consideration on them while exercising.  Either I am pushing too hard for too long, or I have underestimated my maximum heartrate.</p>
+      <p>I have also made a simple figure to represent the proportion of time that I am in each heartrate zone.</p>
+      <img src="/projects/strava_plotting/assets/zone_plot.png" alt="Zone Proportion Plot">
+      <hr class="fade">
+
+      <h4 class="proj">Summary</h4>
+      <hr class="fade-left">
+      <p><a href="#result-tables" title="Results">As previously mentioned</a>, I also retrieved the summary data for all of my activities.  These plots may not look as cool but likely provide more insight into preformance improvements.  As shown in the example data above, the activity summaries provide distance, elevation, heartrate, and speed per ride so I decided to plot them all.  </p>
+      <p>Below are the plots and some notes about each of them.</p>
+      <img src="/projects/strava_plotting/assets/distance_summary.png" alt="Distance Summary Plot">
+      <img src="/projects/strava_plotting/assets/elevation_summary.png" alt="Elevation Summary Plot">
+      <ul>
+        <li>The distance and altitude plots above are nearly equivalent as could be expected.</li>
+        <li>For the first two and a half seasons I only rode a single route with few exceptions.</li>
+        <li>I found a route I enjoyed and this made it very easy to compare times.</li>
+        <li>In retrospect I am actually impressed by how many times I took exactly the same route.  Though it does give comparisons of other metrics across this time span more validity as this holds a lot of variables constant.</li>
+        <li>Mid-way through 2022 I was inspired to extend my regular route by a few kilometers and began to go on increasingly longer rides.</li>
+      </ul>
+      <hr class="fade">
+      <img src="/projects/strava_plotting/assets/speed_summary.png" alt="Speed Summary Plot">
+      <ul>
+        <li>This is one of my favourite plots, showing the steady progression in speed through the seasons and across years. It is also remarkably consistent(?), I only removed two exceptionally anomalous activities from the plots.</li>
+        <li>At the beginning of 2020 I had an average speed of approximately 22km/h and at the end of 2022 I am now averaging 28km/h.</li>
+        <li>This speed increase may be slightly inflated by the fact that the additional distance has mostly been on roads with high speeds but the speed increase is also present when comparing similar routes.</li>
+        <li>The influence of the longer rides can also be seen in the increase in maximum speed.</li>
+      </ul>
+      <hr class="fade">
+      <img src="/projects/strava_plotting/assets/heartrate_summary.png" alt="Heartrate Summary Plot">
+      <ul>
+        <li>This plot shows the same progression as the speed plot but inverted.</li>
+        <li>This is likely a better indicator of my fitness as my speed on the trails is predominantly limited by other people on the trail and the trail itself.</li>
+        <li>It is quite evident that I do little activity during the off-season as I lose whatever fitness I gained over the summer.</li>
+        <li>Note that the average velocity was equivalent or greater in the later activities so the decrease in average heartrate is likely due to an increase in fitness and not a lesser effort.</li>
+      </ul>
+
+      <h3 class="proj">Integration to Website</h3>
+      <hr class="fade-left">
+      <p>I enjoy looking at these plots but it is a bit out of the way to generate them after each ride.  Additionally, I would like them to be available on my website but as it is hosted as a github page there are further complications.  Every time that I want to update the images I would have to make a fresh commit and push.  Alternatively I can separately host and update the images somewhere else.  I have explored hosting the images from my Google Drive as I have some previous experience with that but Google's Drive API requires reauthentication once every seven days for unpublished applications.  This is a frustrating limitation to say the least.</p>
+      <p>I also explored the possibility of generating and hosting the plots on a RPi but then I have to worry about my non-static IP address and uptime of the device.  I don't think that this is a great solution either.</p>
+      <p>At the time of writing this article <a href="/cycling.html" title="Cycling page">I am still hosting them on Google Drive</a> requiring manual updates.  This is unfortunate but I'm sure I will find a better solution at some point.  I suspect that I will have to sort out some other hosting solution if I wish to solve this problem effectively.</p>
+      <hr class="fade">
+
+    </div>
+  </body>
+</html>

@@ -127,21 +127,21 @@ header ul a:hover
 a.monogram
 { /* Monogram is fixed in place, tried to center the text but not great so far,
   also includes a margin to the page edge that should match the left text. */
-position: absolute;
-top: 0;
-left: 0;
-display: flex;
-align-items: center;
-justify-items: center;
-padding: 0.5rem;
-background-color: var(--dark-background);
-font-size: 3rem;
-margin: 2rem 2rem 2rem calc(2rem - 4px);
-height: 3.5rem;
-width: 3.5rem;
-text-decoration: none;
-z-index: 3;
-border: var(--accent) solid 4px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-items: center;
+  padding: 0.5rem;
+  background-color: var(--dark-background);
+  font-size: 3rem;
+  margin: 2rem 2rem 2rem calc(2rem - 4px);
+  height: 3.5rem;
+  width: 3.5rem;
+  text-decoration: none;
+  z-index: 3;
+  border: var(--accent) solid 4px;
 }
 
 .monogram p
@@ -327,6 +327,31 @@ figcaption
   }
 }
 
+/* || Tables */
+
+table
+{
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+  margin: 0, 2rem;
+  background-color: var(--code-background);
+  border-collapse: collapse;
+}
+
+th
+{
+  background-color: var(--dark-background);
+  border: 1px solid;
+}
+
+tr, td
+{
+  border: 1px solid;
+  text-align: center;
+  min-width: 10rem
+}
+
 /* || File Download */
 
 .download {
@@ -398,4 +423,16 @@ figcaption
   animation-timing-function: linear;
   -webkit-animation-iteration-count: infinite;
   animation-iteration-count: infinite;
+}
+
+/* || Code */
+
+.hljs-keyword, .hljs-string, .hljs-number
+{
+  color: var(--accent)
+}
+
+.hljs-comment
+{
+  color: var(--link-hover)
 }
