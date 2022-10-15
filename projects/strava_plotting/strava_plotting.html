@@ -24,20 +24,20 @@
     </header>
     <div class="content">
 
-      <h1>This is a Heading 1.</h1>
+      <h1>Strava Data and API</h1>
       <hr class="fade">
 
       <h3 class="proj">My Fitness Journey if anyone cares?</h3>
       <hr class="fade-left">
       <p>I played a variety of team sports through grade school and I really enjoyed it.  I was never particularly good at any of the sports but my height gave me an advantage in most sports and I was able to capitalize on that.  However, there was the great benefit of getting out of class and going to another school for a tournament or game.</p>
-      <p>When I went to university I knew I wasn't good enough to succeed on any of the university teams so I stopped much of my activity in favour of focussing on academics.  I continued to not do any activity until my first work placement in Athabasca, AB where it was so boring that I started running to entertain myself.  I am no endurance athlete but I reveled in the allure of running faster or further than the day before.  After overcoming the initial pains of running I looked forward to each of my morning runs and getting the chance to improve my times.  This was abruptly ended when I simultaneously developed knee pain and had to go back to university after my placement.</p>
+      <p>When I went to university I knew I wasn't good enough to succeed on any of the university teams so I stopped much of my activity in favour of focussing on academics.  I continued to not do any activity until my <a href="https://www.athabascau.ca" title="Athabasca University">first work placement</a> in Athabasca, AB where it was so boring that I started running just for something to do.  I am no endurance athlete but I reveled in the allure of running faster or further than the day before.  After overcoming the initial pains of running I looked forward to each of my morning runs and getting the chance to improve my times.  This was abruptly ended when I simultaneously developed knee pain and had to go back to university after my placement.</p>
       <p>I didn't do much activity after that but working at a golf course in the summer kept me reasonably active.</p>
       <p>Then the pandemic hit and being stuck inside all day drove me to dust off my bicycle.  This is where I really hit my stride as it allowed me to chase improvements while doing less damage than running.  After a few hundred kilometers on the bicycle I purchased eight year prior I purchased a new bicycle and I have cycled thousands of kilometers in the past few seasons.</p>
       <p>I have grabbed <a href="https://www.strava.com/athletes/56778178/segments/leader" title="My Strava KOMs">a few KOMs</a> and more importantly seen great improvements in my speed and fitness with exception of a couple incidents with a car and some strewn leaves.</p>
 
       <h3 class="proj">Strava</h3>
       <hr class="fade-left">
-      <p>I began recording my workouts with the <a href="https://apps.apple.com/us/app/fitness/id1208224953" title="App Store link">Apple Fitness App</a> as I just needed a place to record my times and distances.  As I got more serious about my times and tracking my progress I switched to Strava for its greater surfacing of statistics as well as the tracking of segments, short 'user created' routes where the best efforts and times are recorded and displayed.  I don't focus on segments but it can provide some additional motivation to push for a stretch and try to top the charts.</p>
+      <p>I began recording my workouts with the <a href="https://apps.apple.com/us/app/fitness/id1208224953" title="App Store link">Apple Fitness App</a> as I just needed a place to record my times and distances.  As I got more serious about my times and tracking my progress I switched to <a href="https://www.strava.com/dashboard" title="Strava dashboard">Strava</a> for its greater surfacing of statistics as well as the tracking of segments, short 'user created' routes where the best efforts and times are recorded and displayed.  I don't focus on segments but it can provide some additional motivation to push for a stretch and try to top the charts.</p>
       <p>Strava also offers a <a href="strava subscription cancel" title="Strava subscription">subscription service</a> which will further analyze your activities and tell you some stuff about them.  However, the more interesting service provided by Strava is their <a href="https://developers.strava.com" title="Strava developer page">API</a>.</p>
 
       <h3 class="proj">Strava API</h3>
@@ -441,7 +441,7 @@ pt.dark()
 
       <h4 class="proj">Summary</h4>
       <hr class="fade-left">
-      <p><a href="#result-tables">As previously mentioned</a>, I also retrieved the summary data for all of my activities.  These plots may not look as cool but likely provide more insight into preformance improvements.  As shown in the example data above, the activity summaries provide distance, elevation, heartrate, and speed per ride so I decided to plot them all.  </p>
+      <p><a href="#result-tables" title="Results">As previously mentioned</a>, I also retrieved the summary data for all of my activities.  These plots may not look as cool but likely provide more insight into preformance improvements.  As shown in the example data above, the activity summaries provide distance, elevation, heartrate, and speed per ride so I decided to plot them all.  </p>
       <p>Below are the plots and some notes about each of them.</p>
       <img src="/projects/strava_plotting/assets/distance_summary.png" alt="Distance Summary Plot">
       <img src="/projects/strava_plotting/assets/elevation_summary.png" alt="Elevation Summary Plot">
@@ -471,9 +471,9 @@ pt.dark()
 
       <h3 class="proj">Integration to Website</h3>
       <hr class="fade-left">
-      <p>I enjoy looking at these plots but it is a bit out of the way to generate them after each ride.  Even more of a hassle, I would like them to be available on my website but it is hosted as a github page which introduces some complications.  Every time that I wanted to update the images I would have to make a fresh commit and push.  Alternatively I could separately host and update the images somewhere else.  I have explored hosting the images from my Google Drive as I have some previous experience with that but Google's Drive API requires reauthentication once every seven days for unpublished applications.  This is a frustrating limitation to say the least.  </p>
+      <p>I enjoy looking at these plots but it is a bit out of the way to generate them after each ride.  Additionally, I would like them to be available on my website but as it is hosted as a github page there are further complications.  Every time that I want to update the images I would have to make a fresh commit and push.  Alternatively I can separately host and update the images somewhere else.  I have explored hosting the images from my Google Drive as I have some previous experience with that but Google's Drive API requires reauthentication once every seven days for unpublished applications.  This is a frustrating limitation to say the least.</p>
       <p>I also explored the possibility of generating and hosting the plots on a RPi but then I have to worry about my non-static IP address and uptime of the device.  I don't think that this is a great solution either.</p>
-      <p>At the time of writing this article I am still hosting them on Google Drive requiring manual updates.  This is unfortunate but I'm sure I will find a better solution at some point.</p>
+      <p>At the time of writing this article <a href="/cycling.html" title="Cycling page">I am still hosting them on Google Drive</a> requiring manual updates.  This is unfortunate but I'm sure I will find a better solution at some point.  I suspect that I will have to sort out some other hosting solution if I wish to solve this problem effectively.</p>
       <hr class="fade">
 
     </div>
