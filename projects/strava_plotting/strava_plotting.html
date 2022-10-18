@@ -156,7 +156,7 @@ pt.dark()
       </code></pre>
       <img src="/projects/strava_plotting/assets/plotnine_example_theme.png" alt="Plotnine example with Theme.">
 
-      <a id="result-tables"><h3 class="proj">Results</h3></a>
+      <a id="result-tables"><h3 style="color: var(--text)" class="proj">Results</h3></a>
       <hr class="fade-left">
       <p>The aspects of the Strava data I find most interesting are how my heartrate reacts over a single ride and the evolution of my performance over the few years that I have been cycling.  The macro performance can be derived from the <code>/athlete/activities</code> data and the detailed heartrate data can be requested from the <code>/activities</code> data.  For these example plots we will be looking at my longest ride to date, a <a href="https://www.strava.com/activities/7830749817" title="Strava activity">59km ride</a> on September 18<sup>th</sup>, 2022.</p>
       <p>A sample of the <code>/activities</code> response.</p>
@@ -468,6 +468,10 @@ pt.dark()
         <li>It is quite evident that I do little activity during the off-season as I lose whatever fitness I gained over the summer.</li>
         <li>Note that the average velocity was equivalent or greater in the later activities so the decrease in average heartrate is likely due to an increase in fitness and not a lesser effort.</li>
       </ul>
+
+      <h3 class="proj">Code</h3>
+      <hr class="fade-left">
+      <p>All of the code used in the creation of these plots has been stored in a <a href="https://github.com/NWNHT/StravaPlotting" title="StravaPlotting repository">Github repository</a>.  It is not particularly pretty or well documented but if you are able to sort out the authorization token and store it in the <code>.config</code> directory then it should all work out.</p>
 
       <h3 class="proj">Integration to Website</h3>
       <hr class="fade-left">
