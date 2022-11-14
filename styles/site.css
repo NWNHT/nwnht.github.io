@@ -169,6 +169,12 @@ p, h1, h2, h3, h4, h5, ol, ul, li
   margin-left: 2rem; margin-right: 2rem;
 }
 
+li
+{
+  margin-left: 0;
+  padding-left: 0rem;
+}
+
 p
 {
   font-weight: 500;

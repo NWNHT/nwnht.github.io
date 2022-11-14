@@ -29,7 +29,7 @@
         <blockquote>"The ability to play chess is the sign of a gentleman.  The ability to play chess well is the sign of a wasted life."</blockquote>
         <figcaption>Paul Morphy</figcaption>
       </div>
-      <p>I am one of the many that discovered/rediscovered chess in the middle of the pandemic and I was immediately hooked.  I knew the rules and had played recreationally but I had never put effort into playing the game or playing it well.  Once I payed a bit more attention I spent hours a day watching chess, playing puzzles, and studying openings.</p>
+      <p>I am one of the many that discovered/rediscovered chess in the middle of the pandemic and I was immediately hooked.  I knew the rules and had played recreationally but I had never put effort into playing the game or playing it well.  Once I paid a bit more attention I spent hours a day watching chess, playing puzzles, and studying openings.</p>
       <p>I don't think I can fully explain my addiction but there is something about the idea that you and your opponent are playing the same board and advantage is only gained by your own talent.  There is no secrets or luck that can lead to an undeserved win.  The unfortunate converse to this is that every mistake is also entirely your fault.</p>
       <p>I'll never be good enough at chess to have wasted my life but I do strive to do my best and that involves using a suite of techniques and tools.  These are mostly built around openings or the endgame where there are a more limited number of positions.  However, I found that I had questions about my games that weren't being answered.  The insights that I am looking for likely aren't that helpful for improving my game but satisfy some curiosities about my playstyle.</p>
 
@@ -43,7 +43,7 @@
       <hr class="fade-left">
       <p>All of the online chess that I have played has been on <a href="www.chess.com" title="Chess.com">Chess.com</a>, which provides some nice features for learning as well as a reasonable if not slightly convoluted <a href="https://www.chess.com/news/view/published-data-api#pubapi-general-rate-limits" title="Chess.com API Documentation">API</a> for accessing public data.  All games can be accessed but must be done by requesting archives of individual months.  I can see some reasoning for this if this is already how <a href="www.chess.com" title="Chess.com">Chess.com</a> is storing this data but it would be great to be able to request a single game, a date range of games, or anything in between.</p>
       <p>Additionally, there is <a href="https://www.chess.com/news/view/published-data-api#pubapi-general-rate-limits" title="Chess.com Rate Limit Rules">no rate limit</a> on the API, they allow infinite sequential requests.  However, if you are making parallel requests they will arbitrarily just not serve the data and send you an error.  This is alright for simple requests but when retrieving all of the games for a player it is annoying to hit this invisible threshold and have to redo the request.  I far prefer a standard fixed rate limit or at least something well defined.</p>
-      <p>To interact with <a href="www.chess.com" title="Chess.com">Chess.com</a>'s API I did find and use a Python package cleverly named '<a href="https://github.com/sarartur/chess.com" title="chess.com Github Repository">chess.com</a>'.  It provides synchronous and asynchronous functions for making requests to each of the available endpoints.  It has worked very consistently and I will continue to use it and highly recommend it to anyone else accessing this data.  It even provides some functionality to space out parallel requests to mitigate the chances of a denied request but this hasn't been 100% effective for me, though this is likely due to me improperly setting the parameters governing repeated requests.</p>
+      <p>To interact with <a href="www.chess.com" title="Chess.com">Chess.com</a>'s API I did find and use a Python package cleverly named <a href="https://github.com/sarartur/chess.com" title="chess.com Github Repository"><code>chess.com</code></a>.  It provides synchronous and asynchronous functions for making requests to each of the available endpoints.  It has worked very consistently and I will continue to use it and highly recommend it to anyone else accessing this data.  It even provides some functionality to space out parallel requests to mitigate the chances of a denied request but this hasn't been 100% effective for me, though this is likely due to me improperly setting the parameters governing repeated requests.</p>
       <h3 class="proj">Data</h3>
       <hr class="fade-left">
       <p>The game data returned by the <a href="www.chess.com" title="Chess.com">Chess.com</a> API is formatted in <a href="https://en.wikipedia.org/wiki/Portable_Game_Notation" title="Portable Game Notation - Wikipedia">Portable Game Notation</a>(PGN) which is the standard for chess games.  It takes the form of a header consisting of tags(7 required and any more are optional) followed by the movetext, a numbered list of moves in <a href="https://en.wikipedia.org/wiki/Algebraic_notation_(chess)" title="Standard Algebraic Notation - Wikipedia">Standard Algebraic Notation</a>(SAN).  The movetext can also contain comments, glyphs, clock values and evaluations if certain extensions of the standard are implemented.  </p>
@@ -51,7 +51,7 @@
       <code><pre>
 [Event "Example Tournament"]
 [Site "Example Location"]
-[Date "2022-11-12"]
+[Date "2022-11-13"]
 [Round "1"]
 [White "NWNHT"]
 [Black "BCiks"]
@@ -59,8 +59,8 @@
 
 1. e4 e5 2. Bc4 Nc6 3. Qh5 Nf6 4. Qxf7# 1-0 
       </pre></code>
-      <p>There is a great Python package <code><a href="https://github.com/niklasf/python-chess" title="python-chess Github Repository">python-chess</a></code> for reading and interpreting PGNs as well as turning the entire game into a tree structure of moves and positions.  I have used it for some testing but it was not required for the data I used in this project.</p>
-      <p>Instead I split the pgn files into individual games and applied regular expressions to retrieve the tags and individual moves along with any of the extended movelist clock formatting.</p>
+      <p>There is a great Python package <code><a href="https://github.com/niklasf/python-chess" title="python-chess Github Repository">python-chess</a></code> for reading and interpreting PGNs as well as turning the entire game into a tree structure of moves and positions.  I have used it for some testing but it was not required for the data processing I did for this project.</p>
+      <p>Instead I split the pgn files into individual games and applied regular expressions to retrieve the tags and individual moves along with any of the extended movetext clock formatting.</p>
       <pre><code>
 tags = re.compile(<span class="hljs-string">r'\[(.*?) \"(.*?)\"\]'</span>)
 moves = re.compile(<span class="hljs-string">r'([0-9]*[.]+) ([a-zA-Z0-9+#=/]*) \{\[%clk ([0-9:.]*)\]\}'</span>)
@@ -68,21 +68,18 @@ moves = re.compile(<span class="hljs-string">r'([0-9]*[.]+) ([a-zA-Z0-9+#=/]*) \
       <h3 class="proj">Processing Data</h3>
       <hr class="fade-left">
       <p>Each of the dictionaries describing a single game are then compiled into a pandas dataframe for each user that was requested.  This is a lot of useful and actionable data on its own but I also cleaned some dates and missing values before adding a few columns to tag the games based on the player of interest and result.  This isn't a brilliant data scheme but it works with minimal extra effort so it is perfect for this precise situation.  See the addendum for a more robust scheme.</p>
-      <p>The dataframes are then saved to parquet files for some basic caching.  These are just re-processed and overwritten each time new data is retrieved.</p>
+      <p>The dataframes are then saved to <a href="https://parquet.apache.org" title="Apache Parquet">parquet</a> files for some basic caching.  These are just re-processed and overwritten each time new data is retrieved.</p>
 
       <h2 class="proj">Plots</h2>
       <hr class="fade-left">
-      <p>The plots are the main show of the application and are generated using my favourite plotting package plotnine, a Python clone of ggplot2.  It uses a grammar of graphing to create the plots which I find very intuitive; I explain it further in my Strava article.(TODO: link)  </p>
+      <p>The plots are the main show of the application and are generated using my favourite plotting package <a href="https://github.com/has2k1/plotnine" title="Plotnine Github">plotnine</a>, a Python clone of <a href="https://ggplot2.tidyverse.org" title="ggplot2">ggplot2</a>.  It uses a grammar of graphing to create the plots which I find very intuitive; I explain it further in my <a href="/projects/strava_plotting/strava_plotting.html" title="Strava Plotting Article">Strava article</a>.</p>
       <p>I created a separate plotting class ChessPlots with a method for each type of plot.  Each call of the object must pass all of the data and filtering information from the application so it is available for the plot if required.  The plot is generated and sent to the GUI with the option to save the plot as a png.  Additional plot types can be added simply by adding another method to the class and updating the dictionary of name-method pairs.</p>
-      <p>Examples of all of the plots can be seen in the github repo:
-      or
-      Below are examples of the plots currently implemented:</p>
-      <img src="/projects/chess_plotter/assets/elo_difference_density.png" alt="ChessPlotter App Interface">
+      <p>Examples of all of the plots can be seen in the <a href="https://github.com/NWNHT/ChessPlotter" title="Chess Plotter Github">Github repository.</a></p>
 
       <h2 class="proj">GUI</h2>
       <hr class="fade-left">
       <p>I don't find designing or creating graphical user interfaces(GUIs) particularly interesting but it is a lot simpler to use a GUI to generate these plots than fiddle around with the command line for each graphic.  To solve the GUI problem I used <a href="https://www.riverbankcomputing.com/software/pyqt/">PyQT</a> which turned out to be quite seamless to work with and doesn't look too bad right out of the box.</p>
-      <p>My application isn't overly complicated but it has a few elements and a couple windows and it was relatively painless to build.  I didn't invest a lot of time into the intricacies of the package but one feature I did notice was the ability to use plain CSS for styling so you don't have to learn some other proprietary styling method.  </p>
+      <p>My application isn't overly complicated but it has a few elements in a couple windows and it was relatively painless to build.  I didn't invest a lot of time into the intricacies of the package but one feature I did notice was the ability to use plain CSS for styling so you don't have to learn some other proprietary styling method.  </p>
       <p>That is really all I have to say about the GUI, it serves it's function and doesn't look awful, that's a win for me.  I'm more interested in making the plots look pretty.</p>
       
       <h2 class="proj">Analysis</h2>
@@ -91,14 +88,17 @@ moves = re.compile(<span class="hljs-string">r'([0-9]*[.]+) ([a-zA-Z0-9+#=/]*) \
       <p>One of the my favourite plots generated by this tool is the game length density plot which plots the density of game lengths grouped by game result.  It isn't particularly granular but there are unique insights to be drawn.  Shown below is my game length density plot along with the game length density plot of my friend who also got into chess.</p>
       <img src="/projects/chess_plotter/assets/NWNHT-GLD.png" alt="NWNHT Game Length Density">
       <figure>
-        <figcaption>NWNHT Game Length Density</figcaption>
+        <figcaption style="margin-bottom: 1rem">NWNHT Game Length Density</figcaption>
       </figure>
       <img src="/projects/chess_plotter/assets/BCiks-GLD.png" alt="BCiks Game Length Density">
       <figure>
         <figcaption>BCiks Game Length Density</figcaption>
       </figure>
-      <p>Comparing my game length versus my friend's shows that I draw early in the game more often than he does.  Almost all of his draws are after many moves(likely in the endgame) while I clearly tend to offer draws when the position is unclear.  This is also expected as I am quite risk averse and prefer to take a draw over a loss even at the potential cost of a win.</p>
-      <p>Focusing on the curves for wins and losses, my wins tend to be shorter games while the opposite is true for my friend.  This is as expected as I have spent a significant amount of time studying openings and the early moves of the game while my friend has focussed on basic chess principles.  I am just surprised that it is so evident in these plots.  Furthermore, separately plotting my game length density playing as white vs. black shows that the quick opening wins that I am achieving are primarily with the white pieces while my black openings are equal at best.</p>
+      <p>Comparing my game length versus my friend's shows that I draw early in the game far more often than he does. Nearly
+        all of his draws are late in the game while I am clearly more prone to offer draws when I just find the position
+        uncertain. This is also expected as I am quite risk averse and prefer to take a draw over a loss even at the potential
+        cost of a win.</p>
+      <p>Focusing on the win and loss curves, my wins tend to be shorter games while the opposite is true for my friend.  This is expected as I have spent a significant amount of time studying openings and the early moves of the game while my friend has focussed on basic chess principles.  I am just surprised that it is so evident in these plots but it is good feedback to know that my studying is having an effect.  Furthermore, separately plotting my game length density playing as white vs. black shows that the quick opening wins that I am achieving are primarily with the white pieces while my black openings are average at best.</p>
       <img src="/projects/chess_plotter/assets/NWNHT-GLD-white.png" alt="NWNHT Game Length Density with white">
       <figure>
         <figcaption style="margin-bottom: 1rem">NWNHT White Game Length Density</figcaption>
@@ -109,8 +109,8 @@ moves = re.compile(<span class="hljs-string">r'([0-9]*[.]+) ([a-zA-Z0-9+#=/]*) \
       </figure>
       <h3 class="proj">Openings</h3>
       <hr class="fade-left">
-      <p>Speaking of openings, the plot below shows the result proportion of white and black for the 'n' most played openings of a player.  This is most useful when filtering by only black or only white positions but it can be useful with many different filters applied.(only certain openings or specific opponents)</p>
-      <p>In the plot with white openings we can see that the only opening in my top 6 most played with a negative record is ECO D20, the Queen's Gambit Accepted.  This is slightly unexpected but I can post-rationalize this now as I admit I haven't studied this line extensively; mostly because it is less common to face than the Queen's Gambit Declined.  That is something that is lost in this particular plot, the actual magnitude of games played in each opening, however, this is shown in the non-fill version of the plot available in the app.</p>
+      <p>Speaking of openings, the plot below shows the result proportion of white and black for the 'n' most played openings of a player as dictated by the bottom field of the app.  This is most useful when filtering by only black or only white positions but it can be useful with many different combinations of the filters.</p>
+      <p>In the plot with white openings we can see that the only opening in my top 6 most played with a negative record is ECO D20, the Queen's Gambit Accepted.  This is slightly unexpected but I can post-rationalize this now as I admit I haven't studied this line extensively; mostly because it is less common to face than the Queen's Gambit Declined.  That touches on something that is lost in this particular plot, the actual magnitude of games played in each opening.  This is however shown in the non-fill version of the plot also available in the app.</p>
       <img src="/projects/chess_plotter/assets/NWNHT-TOF-white.png" alt="NWNHT Top Openings with white">
       <figure>
         <figcaption style="margin-bottom: 1rem">NWNHT Top Openings with white</figcaption>
@@ -121,16 +121,15 @@ moves = re.compile(<span class="hljs-string">r'([0-9]*[.]+) ([a-zA-Z0-9+#=/]*) \
       </figure>
       <h3 class="proj">ELO Difference</h3>
       <hr class="fade-left">
-      <p>Another mildly interesting plot is the ELO difference density plot which shows the density of results based on the difference between the player of interest's and their opponent's ELO.  The results are incredibly predictable: the higher ELO generally wins, draws tend to be around the same ELO.  Isolating for player colour has little effect.</p>
-      <p>(TODO: Include NWNHT-EDD)</p>
+      <p>Another mildly interesting plot is the ELO difference density plot which shows the density of results based on the difference between the player of interest's and their opponent's ELO.  The results are incredibly predictable: the higher ELO generally wins and draws tend to be around the same ELO.  Isolating for player colour has little effect.</p>
       <img src="/projects/chess_plotter/assets/NWNHT-EDD.png" alt="NWNHT ELO Difference Density">
 
       <h2 class="proj">Conclusion / Future Improvements</h2>
       <hr class="fade-left">
       <p>I really enjoy the app, I can actually see myself using this in the future or generating plots for other people.  Additionally there are a few improvements that could be made for usability or just to add some features.  </p>
-      <p>At the time of writing here are a few possible updates:</p>
+      <p>Here are a few possible updates I can think of at the time of writing:</p>
       <ul>
-        <li>include whitelist / blacklist toggle for players and openings</li>
+        <li>Include whitelist / blacklist toggle for players and openings</li>
         <li>Implement some type of error messaging
           <ul>
             <li>Currently plot errors just fail quietly</li>
@@ -139,66 +138,9 @@ moves = re.compile(<span class="hljs-string">r'([0-9]*[.]+) ([a-zA-Z0-9+#=/]*) \
         <li>There could still be some issues with <a href="www.chess.com" title="Chess.com">Chess.com</a> data retrieval, will have to monitor</li>
         <li>Add date and/or time range filters</li>
       </ul>
-      <p>While I was processing the data I also tooled around with using stockfish to evaluate positions and best moves.  It is interesting but I found that the plots and analyses didn't fit in with the rest of the application which focuses on data aggregated over a large number of games.</p>
-      <p>I plan to delve into stockfish further but using a relational database to hold the positions and moves so that I save the evaluations and avoid running them repeatedly, especially for common opening positions.  Even using multiprocessing it can take a while to run a full game evaluation, it would be nice to be able to just import all of the moves/positions into the database and evaluate the positions in batches.  We'll see how well this all turns out.</p>
+      <p>While I was processing the data I also tooled around with using <a href="https://stockfishchess.org" title="Stockfish">Stockfish</a> to evaluate positions and best moves.  It is interesting but I found that the plots and analyses didn't fit in with the rest of the application which focuses on data aggregated over a large number of games.</p>
+      <p>I plan to delve into Stockfish further but using a relational database to hold the positions and moves independently so that I save the evaluations and avoid running them repeatedly, especially for common opening positions.  Even using multiprocessing it can take a while to run a full game evaluation, it would be nice to be able to just import all of the moves/positions into the database and evaluate the positions in batches.  We'll see how well this all turns out.</p>
 
-
-
-      <hr class="fade">
-      <p>regular paragraph text</p>
-      <p>"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."</p>
-      <h2>This is a Heading 2.</h2>
-      <p>regular paragraph text</p>
-      <h class="proj"3>This is a Heading 3.</h3>
-      <h4>This is a Heading 4.</h4>
-      <p>This is some text, with an <a href="wwwasdf.gdfg.com">unvisited link</a>.</p>
-      <div class="download clickable-div">
-        <img src="/images/file-icon.png">
-        <code>downloadtest.txt</code>
-        <a class="clickable-div-span" href="/for-download/downloadtest.txt" download><span></span></a>
-      </div>
-      <div class="download clickable-div">
-        <img src="/images/folder-icon.png">
-        <code>testzip.zip</code>
-        <a class="clickable-div-span" href="/for-download/testzip.zip" download><span></span></a>
-      </div>
-      <p>This is some text, with a <a href="##">visited link</a>.</p>
-      <p>This is <b>bold text</b>.</p>
-      <p>This is <i>italic text</i>.</p>
-
-      <p>Text above ordered list</p>
-      <ol>
-	<li>This is</li>
-	<li>an unordered</li>
-	<li>list of</li>
-	<li>items</li>
-      </ol>
-      <p>Text below ordered list</p>
-
-      <p>Text above unordered list</p>
-      <ul>
-	<li>This is</li>
-	<li>an unordered</li>
-	<li>list of</li>
-	<li>items</li>
-      </ul>
-      <p>Text below unordered list</p>
-
-      <p>This is text above the image.</p>
-      <!--<img src="images/1.jpg" alt="an image">-->
-      <figure>
-	<img src="/images/1.jpg" alt="another image">
-	<figcaption>This is the second image, and this is its caption</figcaption>
-      </figure>
-      <p>This is text below the image</p>
-
-      <p>This is text above the figure</p>
-      <p>"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."</p>
-      <figure>
-	<img src="/images/2.jpg" alt="another image"> <figcaption>This is the second image, and this is its caption</figcaption>
-      </figure>
-      <p>"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."</p>
-      <p>This is text below the figure</p>
       <hr class="fade">
     </div>
   </body>
