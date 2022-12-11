@@ -40,7 +40,7 @@
       <hr class="fade-left">
       <p>My previous chess project just processed PGN files into dataframes for each user and saved them as a parquet file for simple archiving.  This was useful for the analysis at hand but limits any cross-user analysis or more creative queries.  For this project I instead created a <a href="https://www.sqlite.org/index.html">SQLite</a> database to store the games and engine evaluations.  I created the database as shown in the image below using separate tables for the users, games, moves, and positions.  This allows me to query based on the games as I did in this project but it also allows me to query every time a specific move is made(by coordinates or piece) or position is reached, independent of specific game of players.  Functionality similar(and much more sophisticated) to this can be seen in the analysis tools of a popular chess database <a href="https://en.chessbase.com">Chessbase</a>.</p>
 
-      <img src="/projects/twitter_chess/assets/chess_db_structure.png" alt="Twitter Chess SQLite database schema">
+      <img src="/projects/twitter_chess/assets/chess_db_structure.png" alt="Twitter Chess SQLite database schema" style="margin-left: auto; margin-right: auto;">
       <figure>
         <figcaption style="margin-bottom: 1rem">SQLite Schema</figcaption>
       </figure>
@@ -66,28 +66,28 @@
       <pre><code><span class="hljs-keyword">SELECT</span> move_rank,
             <span class="hljs-keyword">COUNT</span>(<span class="hljs-keyword">CASE</span> move_colour <span class="hljs-keyword">WHEN</span> <span class="hljs-string">'Black'</span> <span class="hljs-keyword">THEN</span> <span class="hljs-number">1</span> <span class="hljs-keyword">ELSE</span> <span class="hljs-literal">NULL</span> <span class="hljs-keyword">END</span>) <span class="hljs-keyword">AS</span> Black,
             <span class="hljs-keyword">COUNT</span>(<span class="hljs-keyword">CASE</span> move_colour <span class="hljs-keyword">WHEN</span> <span class="hljs-string">'White'</span> <span class="hljs-keyword">THEN</span> <span class="hljs-number">1</span> <span class="hljs-keyword">ELSE</span> <span class="hljs-literal">NULL</span> <span class="hljs-keyword">END</span>) <span class="hljs-keyword">AS</span> White
-      <span class="hljs-keyword">FROM</span> (<span class="hljs-keyword">SELECT</span> gm.move_num,
-                  p.colour,
-                  <span class="hljs-keyword">CASE</span> <span class="hljs-keyword">WHEN</span> p.colour = <span class="hljs-string">'w'</span> <span class="hljs-keyword">THEN</span> <span class="hljs-string">'Black'</span>
-                        <span class="hljs-keyword">WHEN</span> p.colour = <span class="hljs-string">'b'</span> <span class="hljs-keyword">THEN</span> <span class="hljs-string">'White'</span> <span class="hljs-keyword">END</span> <span class="hljs-keyword">AS</span> move_colour,
-                  <span class="hljs-keyword">CASE</span> m.move_uci <span class="hljs-keyword">WHEN</span> LAG(p.first_move, <span class="hljs-number">1</span>) <span class="hljs-keyword">OVER</span> (<span class="hljs-keyword">PARTITION</span> <span class="hljs-keyword">BY</span> g.game_id <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> gm.move_num) <span class="hljs-keyword">THEN</span> <span class="hljs-number">1</span>
-                        <span class="hljs-keyword">WHEN</span> LAG(p.second_move, <span class="hljs-number">1</span>) <span class="hljs-keyword">OVER</span> (<span class="hljs-keyword">PARTITION</span> <span class="hljs-keyword">BY</span> g.game_id <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> gm.move_num) <span class="hljs-keyword">THEN</span> <span class="hljs-number">2</span>
-                        <span class="hljs-keyword">WHEN</span> LAG(p.third_move, <span class="hljs-number">1</span>) <span class="hljs-keyword">OVER</span> (<span class="hljs-keyword">PARTITION</span> <span class="hljs-keyword">BY</span> g.game_id <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> gm.move_num) <span class="hljs-keyword">THEN</span> <span class="hljs-number">3</span>
-                        <span class="hljs-keyword">ELSE</span> <span class="hljs-number">5</span> <span class="hljs-keyword">END</span> <span class="hljs-keyword">AS</span> move_rank,
-                  m.move_uci,
-                  <span class="hljs-keyword">CASE</span> <span class="hljs-keyword">WHEN</span> p.first_move_eval_type = <span class="hljs-string">'mate'</span> <span class="hljs-keyword">THEN</span> <span class="hljs-number">1000</span> * (p.first_move_eval)/<span class="hljs-keyword">ABS</span>(p.first_move_eval)
-                        <span class="hljs-keyword">ELSE</span> p.first_move_eval <span class="hljs-keyword">END</span> <span class="hljs-keyword">as</span> eval
-            <span class="hljs-keyword">FROM</span> Game g
-            <span class="hljs-keyword">JOIN</span> GameMove gm
-            <span class="hljs-keyword">ON</span> g.game_id = gm.game_id
-            <span class="hljs-keyword">JOIN</span> <span class="hljs-keyword">Move</span> m
-            <span class="hljs-keyword">ON</span> gm.move_id = m.move_id
-            <span class="hljs-keyword">JOIN</span> <span class="hljs-keyword">Position</span> p
-            <span class="hljs-keyword">ON</span> m.position_id = p.position_id
-            <span class="hljs-keyword">WHERE</span> g.game_id = ?
-            <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> move_num) sub
-      <span class="hljs-keyword">GROUP</span> <span class="hljs-keyword">BY</span> move_rank
-      <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> move_rank
+<span class="hljs-keyword">FROM</span> (<span class="hljs-keyword">SELECT</span> gm.move_num,
+            p.colour,
+            <span class="hljs-keyword">CASE</span> <span class="hljs-keyword">WHEN</span> p.colour = <span class="hljs-string">'w'</span> <span class="hljs-keyword">THEN</span> <span class="hljs-string">'Black'</span>
+                  <span class="hljs-keyword">WHEN</span> p.colour = <span class="hljs-string">'b'</span> <span class="hljs-keyword">THEN</span> <span class="hljs-string">'White'</span> <span class="hljs-keyword">END</span> <span class="hljs-keyword">AS</span> move_colour,
+            <span class="hljs-keyword">CASE</span> m.move_uci <span class="hljs-keyword">WHEN</span> LAG(p.first_move, <span class="hljs-number">1</span>) <span class="hljs-keyword">OVER</span> (<span class="hljs-keyword">PARTITION</span> <span class="hljs-keyword">BY</span> g.game_id <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> gm.move_num) <span class="hljs-keyword">THEN</span> <span class="hljs-number">1</span>
+                  <span class="hljs-keyword">WHEN</span> LAG(p.second_move, <span class="hljs-number">1</span>) <span class="hljs-keyword">OVER</span> (<span class="hljs-keyword">PARTITION</span> <span class="hljs-keyword">BY</span> g.game_id <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> gm.move_num) <span class="hljs-keyword">THEN</span> <span class="hljs-number">2</span>
+                  <span class="hljs-keyword">WHEN</span> LAG(p.third_move, <span class="hljs-number">1</span>) <span class="hljs-keyword">OVER</span> (<span class="hljs-keyword">PARTITION</span> <span class="hljs-keyword">BY</span> g.game_id <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> gm.move_num) <span class="hljs-keyword">THEN</span> <span class="hljs-number">3</span>
+                  <span class="hljs-keyword">ELSE</span> <span class="hljs-number">5</span> <span class="hljs-keyword">END</span> <span class="hljs-keyword">AS</span> move_rank,
+            m.move_uci,
+            <span class="hljs-keyword">CASE</span> <span class="hljs-keyword">WHEN</span> p.first_move_eval_type = <span class="hljs-string">'mate'</span> <span class="hljs-keyword">THEN</span> <span class="hljs-number">1000</span> * (p.first_move_eval)/<span class="hljs-keyword">ABS</span>(p.first_move_eval)
+                  <span class="hljs-keyword">ELSE</span> p.first_move_eval <span class="hljs-keyword">END</span> <span class="hljs-keyword">as</span> eval
+      <span class="hljs-keyword">FROM</span> Game g
+      <span class="hljs-keyword">JOIN</span> GameMove gm
+      <span class="hljs-keyword">ON</span> g.game_id = gm.game_id
+      <span class="hljs-keyword">JOIN</span> <span class="hljs-keyword">Move</span> m
+      <span class="hljs-keyword">ON</span> gm.move_id = m.move_id
+      <span class="hljs-keyword">JOIN</span> <span class="hljs-keyword">Position</span> p
+      <span class="hljs-keyword">ON</span> m.position_id = p.position_id
+      <span class="hljs-keyword">WHERE</span> g.game_id = ?
+      <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> move_num) sub
+<span class="hljs-keyword">GROUP</span> <span class="hljs-keyword">BY</span> move_rank
+<span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> move_rank
       </code></pre><p>The results of the above query along with a number of others is then used along with the <a href="https://github.com/has2k1/plotnine"><code>plotnine</code></a> library to generate the plots for the infographic.  I <a href="">have mentioned plotnine before</a> but it is easily my preferred method of plotting with Python.  It definitely isn&#39;t the easiest or quickest to use for a simple plot but it seems to get easier as the complexity of the plot increases.  I have also created a couple personal modules that I use to apply common patterns and this really speeds up the process.</p>
       <p>One of the downsides of plotnine is the inability to join plots side-by-side.  After searching for a solution for far too long I was able to find <a href="https://pypi.org/project/patchworklib/"><code>patchworklib</code></a> which enables simple compositions of <code>matplotlib</code> and <code>matplotlib</code>-based plots.  This worked brilliantly once I submitted a patch to fix a bug with the <code>patchworklib</code> version compatibility checking.</p>
       <p>The resulting composition of the plots can be seen below, it won&#39;t win any design awards but I think it gets the point across and it is surpisingly difficult to find a nice background colour when using black <strong>and</strong> white in the colour scheme.</p>
