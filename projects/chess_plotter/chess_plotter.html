@@ -39,7 +39,7 @@
       <img src="/projects/chess_plotter/assets/elo_difference_density.png" alt="ChessPlotter App Interface">
       <p>The basic operation is to select a user from the top dropdown, apply any player or game filters, select the plot from the bottom dropdown, and then click the plot button to display it.  Further details on operation can be found in the <a href="https://github.com/NWNHT/ChessPlotter" title="Chess Plotter Repository">Github repository</a> along with installation instructions for the app.</p>
 
-      <h2 class="proj">Retrieving Data / Chess.com API</h2>
+      <h2 class="proj" id="retrieving_data">Retrieving Data / Chess.com API</h2>
       <hr class="fade-left">
       <p>All of the online chess that I have played has been on <a href="www.chess.com" title="Chess.com">Chess.com</a>, which provides some nice features for learning as well as a reasonable if not slightly convoluted <a href="https://www.chess.com/news/view/published-data-api#pubapi-general-rate-limits" title="Chess.com API Documentation">API</a> for accessing public data.  All games can be accessed but must be done by requesting archives of individual months.  I can see some reasoning for this if this is already how <a href="www.chess.com" title="Chess.com">Chess.com</a> is storing this data but it would be great to be able to request a single game, a date range of games, or anything in between.</p>
       <p>Additionally, there is <a href="https://www.chess.com/news/view/published-data-api#pubapi-general-rate-limits" title="Chess.com Rate Limit Rules">no rate limit</a> on the API, they allow infinite sequential requests.  However, if you are making parallel requests they will arbitrarily just not serve the data and send you an error.  This is alright for simple requests but when retrieving all of the games for a player it is annoying to hit this invisible threshold and have to redo the request.  I far prefer a standard fixed rate limit or at least something well defined.</p>
@@ -65,7 +65,7 @@
 tags = re.compile(<span class="hljs-string">r'\[(.*?) \"(.*?)\"\]'</span>)
 moves = re.compile(<span class="hljs-string">r'([0-9]*[.]+) ([a-zA-Z0-9+#=/]*) \{\[%clk ([0-9:.]*)\]\}'</span>)
       </code></pre><p>I turn the tags into a dictionary and add another another key-value pair for the list of moves.</p>
-      <h3 class="proj">Processing Data</h3>
+      <h3 class="proj" id="processing_data">Processing Data</h3>
       <hr class="fade-left">
       <p>Each of the dictionaries describing a single game are then compiled into a pandas dataframe for each user that was requested.  This is a lot of useful and actionable data on its own but I also cleaned some dates and missing values before adding a few columns to tag the games based on the player of interest and result.  This isn't a brilliant data scheme but it works with minimal extra effort so it is perfect for this precise situation.  See the addendum for a more robust scheme.</p>
       <p>The dataframes are then saved to <a href="https://parquet.apache.org" title="Apache Parquet">parquet</a> files for some basic caching.  These are just re-processed and overwritten each time new data is retrieved.</p>

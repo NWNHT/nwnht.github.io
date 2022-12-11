@@ -1,0 +1,138 @@
+<!DOCTYPE HTML>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="author" content="Lucas Nieuwenhout">
+    <meta name="description" content="Personal website of Lucas Nieuwenhout.">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#1c1d1c">
+    <link href="/styles/site.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com"> 
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> 
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400&family=Open+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div class="background"></div>
+    <div class="diagonal-overlay"></div>
+    <header>
+      <ul>
+        <li><a href="/projects.html">projects</a></li>
+        <li><a href="/photography.html">photography</a></li>
+        <li><a href="/cycling.html">cycling</a></li>
+      </ul>
+      <a href="/" class="monogram"><p>ln.</p></a>
+    </header>
+    <div class="content">
+
+      <h1>Twitter Chess Bot</h1>
+      <hr class="fade">
+
+      <p>After creating the chess plotting app covered in a <a href="/projects/chess_plotter/chess_plotter.html" target="_blank">previous article</a> I found myself wanting for a more focussed analysis of individual games.  I considered adding this to the functionality of the plotting application but the data and presentation doesn&#39;t fit with the structure of the existing features.  The application provides summary statistics with a number of optional filters but doesn&#39;t have a mode for selecting a single game.  It would interfere with the structure of the app to add this and much of the interesting analysis that can be done on a single game requires an engine evaluation.</p>
+      <p>I could have added another view to the application for single game plots/analysis but I was inspired by F1 Telemetry Bot<a href="https://twitter.com/F1TelemetryBot">@F1TelemetryBot</a> to create a bot that could take requests for analysis and return some custom-created graphic.  So that is the goal, create a Twitter bot that will listen to or periodically poll a hashtag <a href="https://twitter.com/search?q=%23chessindata">#chessindata</a> and respond to any new requests with a graphic summarizing the chess game.</p>
+
+      <h2 class="proj">Data, Database, and SQLite</h2>
+      <hr class="fade-left">
+      <p>One of the largest internet repositories of chess games is <a href="www.chess.com">Chess.com</a>, where a majority of online games are played.  This is the same source of data I used for the chess plotting application so I am able to use many of the same functions but there is a huge hole in the API coverage.  There is no sanctioned method to access a single game or even just retrieve summary information(like <a href="https://en.wikipedia.org/wiki/Portable_Game_Notation">PGN</a> headers).  The inability to access game information using just the game ID would require that the tweet provide at the very least one of the players so that I could search their archieve.  However, even this can be prohibitively slow for players that have played over 1000 games so due ot the structure of the API requests I would also require the month that the game was played in.  Neither of these options are ideal and greatly increases the chance of an error due to poor &#39;user&#39; formatting or bad parsing due to the increased complexity of the input.</p>
+      <p>After scouring the <a href="https://www.chess.com/news/view/published-data-api">API documentation</a> with no luck I found a <a href="https://www.chess.com/clubs/forum/view/guide-unofficial-api-documentation">forum post</a> that details use of unofficial endpoints to request this data.  The risk of these endpoints is that they are only available because Chess.com currently has no mechanism to stop us, so they could go away at any time.  However they do work presently and I have had no issues with denied requests.</p>
+      <p>The endpoint that is useful for me is <code>www.chess.com/callback/live/game/{game_id}</code> whose response headers include the PGN headers of the game in question.  This information gives me the date of the game as well as the white and black player usernames so that I can download a single monthly archive and not the entire backcatalog of a player.  This is done asynchronously with <a href="/projects/chess_plotter/chess_plotter.html#retrieving_data" target="_blank">some tools</a> that I made for my previous chess project.</p>
+
+      <h3 class="proj">Database</h4>
+      <hr class="fade-left">
+      <p>My previous chess project just processed PGN files into dataframes for each user and saved them as a parquet file for simple archiving.  This was useful for the analysis at hand but limits any cross-user analysis or more creative queries.  For this project I instead created a <a href="https://www.sqlite.org/index.html">SQLite</a> database to store the games and engine evaluations.  I created the database as shown in the image below using separate tables for the users, games, moves, and positions.  This allows me to query based on the games as I did in this project but it also allows me to query every time a specific move is made(by coordinates or piece) or position is reached, independent of specific game of players.  Functionality similar(and much more sophisticated) to this can be seen in the analysis tools of a popular chess database <a href="https://en.chessbase.com">Chessbase</a>.</p>
+
+      <img src="/projects/twitter_chess/assets/chess_db_structure.png" alt="Twitter Chess SQLite database schema">
+      <figure>
+        <figcaption style="margin-bottom: 1rem">SQLite Schema</figcaption>
+      </figure>
+
+      <p>With the exception of the engine evaluation I re-use many of the chess <a href="/projects/chess_plotter/chess_plotter.html#processing_data" target="_blank">data processing functions</a> from my previous project to ingest the data into the database.  To get a proper evaluation of a single game can take a couple of minutes and even just ingesting a single month of games for a single user can turn my computer into a space heater for an hour.</p>
+      <p>Completing the evaluation independently of ingesting data allows for evaluation on an &#39;as needed&#39; basis as well as evaluating positions at different depths.  This is realized in the final implementation as the bot only retrieves and evaluates positions that haven&#39;t already been evaluated at an equal or greater depth.  The work done is then saved back to the database for reuse in any other game evaluation.  Subsequent requests of the same game will require zero analysis unless a higher engine depth is used.</p>
+      <p>If I just had free compute sitting around then another option would be to continuously pull unevaluated positions from the database and feed them to the engine.  Theoretically once all of the positions were evaluated it could step up the engine depth and go through all of them again.</p>
+      <p>The main benefit of the positions being stored independently of the games and moves is that positions achieved through <a href="https://en.wikipedia.org/wiki/Transposition_(chess">transpositions</a>) can be evaluated a single time and used multiple times, eliminating expensive duplicate engine evaluations.  This applies to positions achieved through repetitions in a single game or positions reached in different games.  This information could be used to evaluate opening positions or popular positions to a greater depth.</p>
+      <p>A critical component of storing the positions like this is ensuring that they are accurately compared which is more complicated than just inspecting the piece positions.  There is also &#39;metadata&#39; to compare including turn order, castling rights, and <a href="https://www.reddit.com/r/AnarchyChess/comments/kpc7ig/holy_hell/">en passant</a>.  Thankfully these considerations can be accounted for by indexing on a modified <a href="https://en.wikipedia.org/wiki/Forsyth–Edwards_Notation">FEN</a> which excludes the move numbers.  This means that some positions may have all the same pieces in the same positions but result in different entries and evaluations.</p>
+      <p>Alternatively there is an interesting technique called <a href="https://en.wikipedia.org/wiki/Zobrist_hashing">Zobrist Hashing</a> which uses a large exclusive-or of hashes(one for each piece on each square as well as a small number for move order, castling, etc.) to represent a chess position.  A fascinating result of this is moving a piece in the position representation can be done by XORing in the hash for the piece in the current position as well as the piece in the new position.  This technique is used for many games/boardgames with a finite number of positions but I decided against it as using the FEN serves another purpose as an input to the chess engine for evaluation.</p>
+      
+      <h3 class="proj">Engine Evaluations</h4>
+      <hr class="fade-left">
+      <p>One of the largest new parts of this project was applying the chess engine to the positions of interest.  For this I used the Python library <a href="https://pypi.org/project/stockfish/"><code>stockfish</code></a> to access a <a href="https://stockfishchess.org">Stockfish 15.0</a> instance and it was delightfully simple to have it give it&#39;s opinion based on a position reached through a list of moves or directly from a FEN.  Despite the ease of setting up an evaluation it takes an exponentially increasing amount of time to evaluate positions as the depth increases.  From my testing and some research, a depth of 15-20 is sufficient for any kind of chess below the top levels and there are significant diminishing returns after that.</p>
+      <p>My first implementation used a single instance of Stockfish but it was quite time consuming to evaluate an entire game so I parallelized it with Python <code>multiprocessing</code> to cut the time down.  Entire game evaluations to a depth of 15 can now be done in under a minute.  Though it does consume the entire compute bandwidth of my computer for that period.  I knew this before but it really highlights why Chess.com charges for their higher evaluation depths.</p>
+      <p>On a side note I did consider trying to &#39;piggyback&#39; on the evaluation done by Chess.com but this is not supported by their API and there is no guarantee that the requested game has been evaluated on their website.</p>
+      <p>Part of the reason that the evaluations are so expensive is that in addition to the evaluation of the position(and the move made in the game) I was requesting the top 3 next moves and their evaluations.  This allows me to return the difference in the evaluation of the best move versus the move played.  The result is the used for the [centipawn] or [pawn] loss.</p>
+
+      <h2 class="proj">Visualization</h2>
+      <hr class="fade-left">
+      <p>With the game and evaluation data saved to the database it is all available for visualizations given the right SQL incantations.  Though separating out all of the components of the game allows for a lot of flexibility it also requires some verbose SQL queries to join it all back together when requesting data.  Despite some of the complexity it does produce more interesting results as some of the queries basically wouldn&#39;t be possible if it were all stored in dataframes or the original PGNs.</p>
+      <p>Below is one of the queries I make to get the counts of move ranks for the white and black players:</p>
+      <pre><code><span class="hljs-keyword">SELECT</span> move_rank,
+            <span class="hljs-keyword">COUNT</span>(<span class="hljs-keyword">CASE</span> move_colour <span class="hljs-keyword">WHEN</span> <span class="hljs-string">'Black'</span> <span class="hljs-keyword">THEN</span> <span class="hljs-number">1</span> <span class="hljs-keyword">ELSE</span> <span class="hljs-literal">NULL</span> <span class="hljs-keyword">END</span>) <span class="hljs-keyword">AS</span> Black,
+            <span class="hljs-keyword">COUNT</span>(<span class="hljs-keyword">CASE</span> move_colour <span class="hljs-keyword">WHEN</span> <span class="hljs-string">'White'</span> <span class="hljs-keyword">THEN</span> <span class="hljs-number">1</span> <span class="hljs-keyword">ELSE</span> <span class="hljs-literal">NULL</span> <span class="hljs-keyword">END</span>) <span class="hljs-keyword">AS</span> White
+      <span class="hljs-keyword">FROM</span> (<span class="hljs-keyword">SELECT</span> gm.move_num,
+                  p.colour,
+                  <span class="hljs-keyword">CASE</span> <span class="hljs-keyword">WHEN</span> p.colour = <span class="hljs-string">'w'</span> <span class="hljs-keyword">THEN</span> <span class="hljs-string">'Black'</span>
+                        <span class="hljs-keyword">WHEN</span> p.colour = <span class="hljs-string">'b'</span> <span class="hljs-keyword">THEN</span> <span class="hljs-string">'White'</span> <span class="hljs-keyword">END</span> <span class="hljs-keyword">AS</span> move_colour,
+                  <span class="hljs-keyword">CASE</span> m.move_uci <span class="hljs-keyword">WHEN</span> LAG(p.first_move, <span class="hljs-number">1</span>) <span class="hljs-keyword">OVER</span> (<span class="hljs-keyword">PARTITION</span> <span class="hljs-keyword">BY</span> g.game_id <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> gm.move_num) <span class="hljs-keyword">THEN</span> <span class="hljs-number">1</span>
+                        <span class="hljs-keyword">WHEN</span> LAG(p.second_move, <span class="hljs-number">1</span>) <span class="hljs-keyword">OVER</span> (<span class="hljs-keyword">PARTITION</span> <span class="hljs-keyword">BY</span> g.game_id <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> gm.move_num) <span class="hljs-keyword">THEN</span> <span class="hljs-number">2</span>
+                        <span class="hljs-keyword">WHEN</span> LAG(p.third_move, <span class="hljs-number">1</span>) <span class="hljs-keyword">OVER</span> (<span class="hljs-keyword">PARTITION</span> <span class="hljs-keyword">BY</span> g.game_id <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> gm.move_num) <span class="hljs-keyword">THEN</span> <span class="hljs-number">3</span>
+                        <span class="hljs-keyword">ELSE</span> <span class="hljs-number">5</span> <span class="hljs-keyword">END</span> <span class="hljs-keyword">AS</span> move_rank,
+                  m.move_uci,
+                  <span class="hljs-keyword">CASE</span> <span class="hljs-keyword">WHEN</span> p.first_move_eval_type = <span class="hljs-string">'mate'</span> <span class="hljs-keyword">THEN</span> <span class="hljs-number">1000</span> * (p.first_move_eval)/<span class="hljs-keyword">ABS</span>(p.first_move_eval)
+                        <span class="hljs-keyword">ELSE</span> p.first_move_eval <span class="hljs-keyword">END</span> <span class="hljs-keyword">as</span> eval
+            <span class="hljs-keyword">FROM</span> Game g
+            <span class="hljs-keyword">JOIN</span> GameMove gm
+            <span class="hljs-keyword">ON</span> g.game_id = gm.game_id
+            <span class="hljs-keyword">JOIN</span> <span class="hljs-keyword">Move</span> m
+            <span class="hljs-keyword">ON</span> gm.move_id = m.move_id
+            <span class="hljs-keyword">JOIN</span> <span class="hljs-keyword">Position</span> p
+            <span class="hljs-keyword">ON</span> m.position_id = p.position_id
+            <span class="hljs-keyword">WHERE</span> g.game_id = ?
+            <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> move_num) sub
+      <span class="hljs-keyword">GROUP</span> <span class="hljs-keyword">BY</span> move_rank
+      <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> move_rank
+      </code></pre><p>The results of the above query along with a number of others is then used along with the <a href="https://github.com/has2k1/plotnine"><code>plotnine</code></a> library to generate the plots for the infographic.  I <a href="">have mentioned plotnine before</a> but it is easily my preferred method of plotting with Python.  It definitely isn&#39;t the easiest or quickest to use for a simple plot but it seems to get easier as the complexity of the plot increases.  I have also created a couple personal modules that I use to apply common patterns and this really speeds up the process.</p>
+      <p>One of the downsides of plotnine is the inability to join plots side-by-side.  After searching for a solution for far too long I was able to find <a href="https://pypi.org/project/patchworklib/"><code>patchworklib</code></a> which enables simple compositions of <code>matplotlib</code> and <code>matplotlib</code>-based plots.  This worked brilliantly once I submitted a patch to fix a bug with the <code>patchworklib</code> version compatibility checking.</p>
+      <p>The resulting composition of the plots can be seen below, it won&#39;t win any design awards but I think it gets the point across and it is surpisingly difficult to find a nice background colour when using black <strong>and</strong> white in the colour scheme.</p>
+      
+      <img src="/projects/twitter_chess/assets/46747178545.png" alt="Graphic for NWNHT vs. RafaM2020 game">
+      <figure>
+        <figcaption style="margin-bottom: 1rem">Result for chess.com game ID <a href="https://www.chess.com/game/live/46747178545">46747178545</a></figcaption>
+      </figure>
+
+      <h3 class="proj">Interpretation</h4>
+      <hr class="fade-left">
+      <ul>
+        <li>All evaluations are presented in units of pawns(points of material).</li>
+        <li>The &quot;Best Move&quot;, &quot;Second Best Move&quot;, ... represent the count of total best moves played by each player.</li>
+        <li>The Evaluation and Material Balance plot shows the per ply evaluation and material balance.<ul>
+          <li>The colour of the evaluation plot will change to represent the colour of the side with the advantage.</li>
+        </ul>
+        </li>
+        <li>The Time Advantage plot shows the time difference from the perspective of the white player.</li>
+        <li>The Evaluation Loss by Move plot shows the [pawn] evaluation lost per move, the difference between the evaluation of the best move and the move actually played.</li>
+      </ul>
+
+      <h2 class="proj">Twitter Integration</h2>
+      <hr class="fade-left">
+      <p>For the Twitter integration I decided to use the <a href="https://github.com/tweepy/tweepy">Tweepy</a> library which comes highly recommended and I can say that it was very straightforward to use to make searches and receive the responses.  It provides a few methods to authenticate with the <a href="https://developer.twitter.com/en/docs">Twitter API</a> and has been extremely reliable.</p>
+      <p>The Twitter API itself is understandably robust and fully featured though I did have some confusion regarding the multiple versions.  I began by using the v2 API as I assumed that it would be best but I soon found that it <a href="https://twittercommunity.com/t/post-tweet-media-upload-in-v2/148590">doesn&#39;t include the ability to upload media</a>.  This is clearly prohibitive for my purpose so I had to request elevated access and switch to v1.1 API. </p>
+      <p>I honestly don&#39;t have too much else to say about the Twitter integration as it was fairly simple and only required a couple hundred lines, most of which was authentication failsafes.  </p>
+      <p>The backend which downloads, processes, evaluates, and plots the data is completely independent; it takes only a Chess.com game ID as input and outputs the completed image.  This means that if somehow Twitter crashes and burns then I should be able to plug this into a Mastodon API or really anything else.</p>
+
+      <h2 class="proj">Summary</h2>
+      <hr class="fade-left">
+      <p>The result of the above is that when this bot is running, it will find any tweet of the form &quot;chess.com_game_ID #chessindata&quot; and respond within a few minutes with an infographic describing the game.  I do have an RPi4 that I could run this on to keep the bot up all of the time but unfortunately I think that a full stockfish evaluation would bring it to it&#39;s knees.  There are extremely lightweight chess engines that are designed to be run on micro computers but if I am being honest Twitter doesn&#39;t need another bot.</p>
+      <p>This bot is available on <a href="https://github.com/NWNHT/TwitterChessBot">Github</a> for the curious.</p>
+      <p>Since creating this bot there are a few enhancements that I have thought of and might implement if I want to upgrade this in the future.  Below are the ones that I have thought of so far but I might add more as <a href="https://github.com/NWNHT/TwitterChessBot/issues">Github issues</a> if I have any brilliant ideas.</p>
+      <ul>
+        <li>Implement ability to choose engine depth in the tweet</li>
+        <li>Adjust the time axis labels for the time balance plot depending on time control<ul>
+          <li>This would make it easier to read for classical time controls but those are rare online</li>
+        </ul>
+        </li>
+        <li>Get some computer to be continually evaluating positions</li>
+        <li>Add some more thoughful or informative text to the tweet instead of just the image, could include some summary statistics or summary</li>
+      </ul>
+      <hr class="fade">
+
+    </div>
+  </body>
+</html>
