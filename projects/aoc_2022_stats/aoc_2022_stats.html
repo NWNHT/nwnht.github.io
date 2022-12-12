@@ -1,0 +1,114 @@
+<!DOCTYPE HTML>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="author" content="Lucas Nieuwenhout">
+    <meta name="description" content="Personal website of Lucas Nieuwenhout.">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#1c1d1c">
+    <link href="/styles/site.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com"> 
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> 
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400&family=Open+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div class="background"></div>
+    <div class="diagonal-overlay"></div>
+    <header>
+      <ul>
+        <li><a href="/projects.html">projects</a></li>
+        <li><a href="/photography.html">photography</a></li>
+        <li><a href="/cycling.html">cycling</a></li>
+      </ul>
+      <a href="/" class="monogram"><p>ln.</p></a>
+    </header>
+    <div class="content">
+      <h1>Advent of Code Statistics - 2022</h1>
+      <hr class="fade">
+
+      <p>I have really been enjoying the <a href="https://adventofcode.com">2022 Advent of Code</a> created by <a href="https://github.com/topaz">Eric Wastl</a>.  For the unfamiliar, this is the combination of an advent calendar and <a href="https://leetcode.com">Leetcode</a> programming puzzles mixed with a lot of imaginative storytelling.  This is my first year participating and I am clearly not contending for the leaderboard but I have been able to keep up.</p>
+      <p>I have done a number of programming puzzles but I find that they incentivize quick and dirty solutions to just get to the next one.  The forced slow pace of a single two part puzzle per day allows you to take time and not feel forced to create the bare minimum.</p>
+      <p>Besides the actual puzzles I was intrigued to see that there are <a href="https://www.adventofcode.com/2022/leaderboard">Leaderboard</a> and <a href="https://www.adventofcode.com/2022/stats">Stats</a> pages which provide puzzle completion times and puzzle completion counts for each day since the calendar began in <a href="https://adventofcode.com/2015">2015</a>.  I don&#39;t have much else to say here but I have had some fun with numbers below.</p>
+
+      <p style="margin-top: 3rem; margin-bottom: 3rem">I plan to periodically update the plots when I feel like it and add any thoughts. Last updated 2022-12-12</p>
+      <p>A consistent colour scheme is kept for years through the plots.  This year, <a href="https://adventofcode.com/2022">2022</a>, is red and the mean of all of the results is white.  Completion of the first part of the puzzle is represented by the solid line and the second part is represented by the dashed line.</p>
+
+      <h2 class="proj">Total Completions</h2>
+      <hr class="fade-left">
+      
+      <img src="/projects/aoc_2022_stats/assets/PlayerCountMacro.png" alt="PlayerCountMacro Plot" style="margin-left: auto; margin-right: auto;">
+      <ul>
+        <li>The white &#39;mean&#39; line represents the average decline in players multiplied by the players who completed the first puzzle in 2022.</li>
+        <li>2022 has had higher retention than average so far though the gap is closing after a difficult <a href="https://adventofcode.com/2022/day/7">day 7</a> puzzle.</li>
+      </ul>
+
+      <h2 class="proj">Total Completions to Current Day</h2>
+      <hr class="fade-left">
+      <img src="/projects/aoc_2022_stats/assets/PlayerCount.png" alt="PlayerCount Plot" style="margin-left: auto; margin-right: auto;">
+      <ul>
+        <li>This shows the progression until the current day, with time this will match the previous plot.</li>
+      </ul>
+      
+      <h2 class="proj">Normalized Player Retention</h2>
+      <hr class="fade-left">
+      <img src="/projects/aoc_2022_stats/assets/NormalizedPlayerRetentionMacro.png" alt="NormalizedPlayerRetentionMacro Plot" style="margin-left: auto; margin-right: auto;">
+      <ul>
+        <li>This is a modified version of the player count plots where each year has been normalized to the player count of the first day of the year.</li>
+        <li>This year was going really well but began to drop below the average on day 9, mostly due to the difficult day 7 puzzle.</li>
+        <li>Note that the first year(2015) represented by the dark green line is abnormally high, likely due to the smaller beginning population and fewer casuals just dropping by for the first puzzle and forgetting about it.</li>
+      </ul>
+
+      <h2 class="proj">Normalized Player Retention to Current Day</h2>
+      <hr class="fade-left">
+      <img src="/projects/aoc_2022_stats/assets/NormalizedPlayerRetention.png" alt="NormalizedPlayerRetention Plot" style="margin-left: auto; margin-right: auto;">
+      <ul>
+        <li>This just shows player retention until the current day, with time this will match the previous plot.</li>
+      </ul>
+
+      <h2 class="proj">Puzzle Part Completion Ratio</h2>
+      <hr class="fade-left">
+      <img src="/projects/aoc_2022_stats/assets/CompletionRatio.png" alt="CompletionRatio Plot" style="margin-left: auto; margin-right: auto;">
+      <ul>
+        <li>This is the ratio of completion of the first puzzle to completion of the second puzzle.  A higher ratio(higher number) will represent a problem with a more difficult second part.</li>
+        <li>This shows a significant pattern of difficult second parts on day 7 as well as on days 21-23.</li>
+        <li>I suspect the large spike on the 25th is a result of people not wanting to commit too much time on the holiday though it could be a significantly more difficult second part.</li>
+        <li>So far in 2022 the second part has been relatively similar to the first part but it seems the common factor / <a href="https://en.wikipedia.org/wiki/Modulo_operation">modulo</a> trick of <a href="https://adventofcode.com/2022/day/11">day 11</a> caught a few people out.</li>
+      </ul>
+      <p>These next plots include times that are pulled from the top 100 leaderboards.  They are only representative of the absolute highest echelon of contendors but it is all the data I can get.  The times are still useful indicators of the difficulty of the problems though time consuming problems don&#39;t always mean difficult problems.</p>
+
+      <h2 class="proj">Completion Time: 2019-2022</h2>
+      <hr class="fade-left">
+      <img src="/projects/aoc_2022_stats/assets/CompletionTime19-22.png" alt="CompletionTime19-22 Plot" style="margin-left: auto; margin-right: auto;">
+      <ul>
+        <li>The white line and &#39;ribbon&#39; show the average times as collected over all years.  The centreline is the average completion time of the top 100, the ribbon is the average shortest time to the average longest time.</li>
+        <li>The effects of <a href="https://openai.com/blog/chatgpt/">ChatGPT</a> can be seen in the first six days of 2022 though this has eased off a bit as the input parsing has become more complex.</li>
+        <li>A clear trend of longer completion times can be seen as the calendar progresses, <strong>especially</strong> for the second part of the puzzle.</li>
+        <li>The short completion time on the 25th supports the idea that the final problems aren&#39;t difficult, people just don&#39;t get around to the second part.
+          <ul>
+          <li>If <strong>all</strong> times were logged then the short average time on the final day could be attributed to only the quick and dedicated players completing the puzzle and bringing the average time down but since only the top 100 players are saved and they are all try-hards this is not a factor.</li>
+      </ul>
+      </li>
+      </ul>
+      
+      <h2 class="proj">Completion Time 2022</h2>
+      <hr class="fade-left">
+      <img src="/projects/aoc_2022_stats/assets/CompletionTime2022.png" alt="CompletionTime2022 Plot" style="margin-left: auto; margin-right: auto;">
+      <ul>
+        <li>This is an expanded view of the completion times for the year 2022.  The line is the average completion time of the top 100 while the ribbon shows the quickest and slowest of the top 100.</li>
+        <li>The fastest completion times are just outrageous in the first days with automated submission and the use of ChatGPT.</li>
+      </ul>
+
+      <h2 class="proj">Completion Time History</h2>
+      <hr class="fade-left">
+      <img src="/projects/aoc_2022_stats/assets/CompletionTimeMacro.png" alt="CompletionTimeMacro Plot" style="margin-left: auto; margin-right: auto;">
+      <ul style="margin-bottom: 3rem">
+        <li>This plot is identical to the previous plot but covers all years of the challenge since 2016.</li>
+        <li>It really shows how remarkably consistently there are at least 100 people that can complete the challenge in under 20 minutes.</li>
+      </ul>
+
+
+      <hr class="fade">
+
+    </div>
+  </body>
+</html>
