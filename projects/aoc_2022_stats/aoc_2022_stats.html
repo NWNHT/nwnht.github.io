@@ -30,12 +30,10 @@
       <p>I have done a number of programming puzzles but I find that they incentivize quick and dirty solutions to just get to the next one.  The forced slow pace of a single two part puzzle per day allows you to take time and not feel forced to create the bare minimum.</p>
       <p>Besides the actual puzzles I was intrigued to see that there are <a href="https://www.adventofcode.com/2022/leaderboard">Leaderboard</a> and <a href="https://www.adventofcode.com/2022/stats">Stats</a> pages which provide puzzle completion times and puzzle completion counts for each day since the calendar began in <a href="https://adventofcode.com/2015">2015</a>.  I don&#39;t have much else to say here but I have had some fun with numbers below.</p>
 
-      <p style="margin-top: 3rem; margin-bottom: 3rem">I plan to periodically update the plots when I feel like it and add any thoughts. Last updated 2022-12-18</p>
       <p>A consistent colour scheme is kept for years through the plots.  This year, <a href="https://adventofcode.com/2022">2022</a>, is red and the mean of all of the results is white.  Completion of the first part of the puzzle is represented by the solid line and the second part is represented by the dashed line.</p>
 
       <h2 class="proj">Total Completions</h2>
       <hr class="fade-left">
-      
       <img src="/projects/aoc_2022_stats/assets/PlayerCountMacro.png" alt="PlayerCountMacro Plot" style="margin-left: auto; margin-right: auto;">
       <ul>
         <li>The white &#39;mean&#39; line represents the average decline in players multiplied by the players who completed the first puzzle in 2022.</li>
@@ -45,16 +43,18 @@
             <li>Though this 'non-recovery' will likely diminish with time as people complete puzzles in future years.</li>
           </ul>
         </li>
-        <li><a href="https://adventofcode.com/2022/day/16">Day 16</a> was followed by a similarly difficult <a href="https://adventofcode.com/2022/day/17">day 17</a> which continued the participation decline.  It will be interesting to see if players return to try the remainder of the challenges or lose motivation.</li>
+        <li><a href="https://adventofcode.com/2022/day/16">Day 16</a> was followed by an equally difficult <a href="https://adventofcode.com/2022/day/17">day 17</a> which continued the participation decline.  It will be interesting to see if players return to try the remainder of the challenges or lose motivation.</li>
+        <li>There was a slight recovery after the <a href="https://adventofcode.com/2022/day/16">day 16</a> and <a href="https://adventofcode.com/2022/day/17">day 17</a> gauntlet but the player count never recovered to the expected count.</li>
+        <li>The player count reached a sort of plateau after <a href="https://adventofcode.com/2022/day/16">day 16</a> and the player count dropped on difficult days but recovered the next day when the committed players returned.</li>
       </ul>
 
-      <h2 class="proj">Total Completions to Current Day</h2>
+      <h2 class="proj">Total Completions - Final Days</h2>
       <hr class="fade-left">
-      <img src="/projects/aoc_2022_stats/assets/PlayerCount.png" alt="PlayerCount Plot" style="margin-left: auto; margin-right: auto;">
+      <img src="/projects/aoc_2022_stats/assets/PlayerCountZoom.png" alt="PlayerCountMacro Plot" style="margin-left: auto; margin-right: auto;">
       <ul>
-        <li>This shows the progression until the current day, with time this will match the previous plot.</li>
+        <li>This is just a focus on the final half of the graph above.</li>
       </ul>
-      
+
       <h2 class="proj">Normalized Player Retention</h2>
       <hr class="fade-left">
       <img src="/projects/aoc_2022_stats/assets/NormalizedPlayerRetentionMacro.png" alt="NormalizedPlayerRetentionMacro Plot" style="margin-left: auto; margin-right: auto;">
@@ -63,13 +63,14 @@
         <li>This year was going really well but began to drop below the average on day 9, mostly due to the difficult <a href="https://adventofcode.com/2022/day/7">day 7</a> puzzle.</li>
         <li>Note that the first year(2015) represented by the dark green line is abnormally high, likely due to the smaller beginning population and fewer casuals just dropping by for the first puzzle and forgetting about it.</li>
         <li>The difficultly of both the <a href="https://adventofcode.com/2022/day/16">day 16</a> and <a href="https://adventofcode.com/2022/day/17">day 17</a> challenges are highlighted here as the normalized participation is the lowest ever for the given advent day.  Nearly lower than the minimum ending participation.</li>
+        <li>Similar conclusions can be drawn from the normalized player plots but it is a bit more clear that <a href="https://adventofcode.com/2022/day/16">day 16</a> and <a href="https://adventofcode.com/2022/day/17">day 17</a> had a larger than average impact on the player count.  The normalized player count is fighting for the second lowest for the last 10 days.</li>
       </ul>
 
-      <h2 class="proj">Normalized Player Retention to Current Day</h2>
+      <h2 class="proj">Normalized Player Retention - Final Days</h2>
       <hr class="fade-left">
-      <img src="/projects/aoc_2022_stats/assets/NormalizedPlayerRetention.png" alt="NormalizedPlayerRetention Plot" style="margin-left: auto; margin-right: auto;">
+      <img src="/projects/aoc_2022_stats/assets/NormalizedPlayerRetentionZoom.png" alt="NormalizedPlayerRetentionMacro Plot" style="margin-left: auto; margin-right: auto;">
       <ul>
-        <li>This just shows player retention until the current day, with time this will match the previous plot.</li>
+        <li>This is just a focus on the final half of the graph above.</li>
       </ul>
 
       <h2 class="proj">Puzzle Part Completion Ratio</h2>
@@ -81,6 +82,7 @@
         <li>I suspect the large spike on the 25<sup>th</sup> is a result of people not wanting to commit too much time on the holiday though it could be a significantly more difficult second part.</li>
         <li>So far in 2022 the second part has been relatively similar to the first part but it seems the common factor / <a href="https://en.wikipedia.org/wiki/Modulo_operation">modulo</a> trick of <a href="https://adventofcode.com/2022/day/11">day 11</a> caught a few people out.</li>
         <li>Notable completion ratios for both <a href="https://adventofcode.com/2022/day/16">day 16</a> and <a href="https://adventofcode.com/2022/day/17">day 17</a> which can be explained by their difficulty.  Note that the ratio for <a href="https://adventofcode.com/2022/day/17">day 17</a> should decrease as days pass, the <a href="https://adventofcode.com/2022/day/16">day 16</a> ratio has dropped significantly since yesterday.</li>
+        <li>The ratio stayed relatively low except for another spike on the 22 which is typically the day with the most difficult puzzle.</li>
       </ul>
       <p>These next plots include times that are pulled from the top 100 leaderboards.  They are only representative of the absolute highest echelon of contendors but it is all the data I can get.  The times are still useful indicators of the difficulty of the problems though time consuming problems don&#39;t always mean difficult problems.</p>
 
@@ -93,9 +95,10 @@
         <li>A clear trend of longer completion times can be seen as the calendar progresses, <strong>especially</strong> for the second part of the puzzle.</li>
         <li>The short completion time on the 25th supports the idea that the final problems aren&#39;t difficult, people just don&#39;t get around to the second part.
           <ul>
-          <li>If <strong>all</strong> times were logged then the short average time on the final day could be attributed to only the quick and dedicated players completing the puzzle and bringing the average time down but since only the top 100 players are saved and they are all try-hards this is not a factor.</li>
-      </ul>
-      </li>
+            <li>If <strong>all</strong> times were logged then the short average time on the final day could be attributed to only the quick and dedicated players completing the puzzle and bringing the average time down but since only the top 100 players are saved and they are all try-hards this is not a factor.</li>
+          </ul>
+        </li>
+        <li>The completion times stay within normal ranges except <a href="https://adventofcode.com/2022/day/16">day 16</a> and <a href="https://adventofcode.com/2022/day/19">day 19</a>.  This is quite the feat that is achieved by the designer Eric Wastl.  I can't imagine being able to consistently create puzzles that (loosely) fit the story and are of appropriate difficulty.</li>
       </ul>
       
       <h2 class="proj">Completion Time 2022</h2>
@@ -105,6 +108,7 @@
         <li>This is an expanded view of the completion times for the year 2022.  The line is the average completion time of the top 100 while the ribbon shows the quickest and slowest of the top 100.</li>
         <li>The fastest completion times are just outrageous in the first days with automated submission and the use of ChatGPT.</li>
         <li><a href="https://adventofcode.com/2022/day/18">Day 18</a> provides some much needed reprieve after the demanding previous days.  I am curious if the completion numbers will recover with this simpler day or if previous days have irrevocably turned people away.</li>
+        <li>The first puzzle completion time of <a href="https://adventofcode.com/2022/day/19">day 19</a> quickly dashed hopes of easy puzzles and was quite anomalous, only matched by a few puzzles from 2021.</li>
       </ul>
 
       <h2 class="proj">Completion Time History</h2>
@@ -112,7 +116,7 @@
       <img src="/projects/aoc_2022_stats/assets/CompletionTimeMacro.png" alt="CompletionTimeMacro Plot" style="margin-left: auto; margin-right: auto;">
       <ul style="margin-bottom: 3rem">
         <li>This plot is identical to the previous plot but covers all years of the challenge since 2016.</li>
-        <li>It really shows how remarkably consistently there are at least 100 people that can complete the challenge in under 20 minutes.</li>
+        <li>It really shows how remarkably consistently there are at least 100 people that can complete at least the first challenge in under 20 minutes.</li>
       </ul>
 
 
