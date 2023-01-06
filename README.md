@@ -1,1 +1,3 @@
-Personal website, a work in progress.
+# Personal Website  
+
+A constant work in progress.
