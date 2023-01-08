@@ -28,27 +28,31 @@
 
       <p>I had previously written curling off as a boring sport but the stones aligned and it ended up piquing my interest a couple of times this year.  It is still quite a slow game but this allows you to study the position and make your own &#39;armchair skip&#39; calls as everybody stands around looking at the rocks.  This new interest as well as the fact that it is basically a turn-based game led me to explore it with the data it generates.</p>
       <p>I was able to find an <a href="https://www.jordanmyslik.com/portfolio/curling-analytics/#menvswomen">article</a> written by Jordan Myslik on his <a href="https://www.jordanmyslik.com">personal website</a> that showed that someone else had a similar idea.  I avoided fully reading the article before conducting my project but I did use his information on where to access the <a href="https://worldcurling.org">World Curling Federation</a>(WCF) data as well as the idea to parse the pdf documents as xml.  Reading the article afterwards it seems that our methods were very similar; likely due to there being an &#39;clear&#39; way to retrieve and parse this data but there is no doubt that my work is at the very least inspired by Jordan&#39;s work.</p>
-      <p>The general process of this project is outlined below:</p>
+      <p>The general process of this project is outlined below, all code is available on <a href="https://github.com/NWNHT/curling">Github</a>.</p>
       <p>Rough steps of the process:</p>
       <ul>
-        <li>Downloading the data<ul>
-          <li>Finding the documents</li>
-          <li>downloading the documents</li>
+        <li><a href="#gathering-data-link">Gathering Data</a><ul>
+          <li><a href='#finding-the-documents-link'>Finding the documents</a></li>
+          <li><a href='#downloading-the-data-link'>Downloading the Data</a></li>
         </ul>
         </li>
-          <li>Parsing the data<ul>
-          <li>Parsing text</li>
-          <li>Parsing stone locations</li>
+          <li><a href='#parsing-the-data-link'>Parsing the Data</a><ul>
+            <li><a href='#parsing-text-link'>Parsing Text</a></li>
+            <li><a href='#parsing-positions-link'>Parsing Positions</a></li>
+            <li><a href='#parsing-summary-link'>Parsing Summary</a></li>
         </ul>
         </li>
-        <li>Creation of sqlite database<ul>
-          <li>Schema</li>
-          <li>Insertion</li>
+        <li><a href='#populating-sqlite-database-link'>Populating SQLite Database</a><ul>
+          <li><a href='#schema-link'>Schema</a></li>
+          <li><a href='#populating-database-link'>Populating Database</a></li>
         </ul>
         </li>
-        <li>Fun with graphs</li>
+        <li><a href='#fun-with-graphs-link'>Fun with Graphs</a></li>
       </ul>
+
+      <a id='gathering-data-link'></a>
       <h2 class='proj' id="gathering-data">Gathering Data</h2>
+      <a id='finding-the-documents-link'></a>
       <h3 class='proj' id="finding-the-documents">Finding the Documents</h3>
       <hr class="fade-left">
 
@@ -73,6 +77,7 @@
         Add path to list
       </code></pre><p>The splitting of the searching and downloading of documents made it simpler to test as well as adding a layer of protection in case the download failed halfway through, making it simpler to pick up where it failed.</p>
       
+      <a id='downloading-the-data-link'></a>
       <h3 class='proj' id="downloading-the-data">Downloading the Data</h3>
       <hr class="fade-left">
       <p>This process is quite simple as it just requires looping through the saved list of paths saved from the previous step and requesting the indicated document.  I introduced a bit of a delay as to not <a href="https://en.wikipedia.org/wiki/Denial-of-service_attack">DOS</a> their servers and after an hour I had all of the pdfs.  As previously mentioned there was a pdf document that was corrupted so I tried to go back and find the problem but it turns out that the original file is corrupted and there is nothing I can do about it so I just blacklisted it in the parsing of the documents.</p>
@@ -83,6 +88,7 @@
   <span>Save</span> <span>file</span>
   <span class="hljs-keyword">sleep</span>(delay)
       </code></pre>
+      <a id='parsing-the-data-link'></a>
       <h2 class='proj' id="parsing-the-data">Parsing the Data</h2>
       <hr class="fade-left">
       <p>An example of each page of the pdf documents can be seen below.  It is comprised of 1 to 16 positions/frames along with some throw/shot information.  This is topped off with the header that contains match, team, and scoring information.</p>
@@ -91,6 +97,7 @@
       <p>The parsing process is a nightmare and borderline not possible if not for the saving graces that the positioning of the text elements relative to eachother is fairly consistent and that the stone colours are always the same shades of red and yellow.</p>
       <p>The parsing of the text and other elements will be explored in the following sections.</p>
       
+      <a id='parsing-text-link'></a>
       <h3 class='proj' id="parsing-text">Parsing Text</h3>
       <hr class="fade-left">
       <p>The parsing of the text was the most annoying part of the whole procedure.  Once I was able to get the text information out of the pdf format it was fairly smooth sailing but getting to that point was the issue.  On my way to just using the same method that Jordan Myslik used, I tried to implement <a href="https://github.com/jorisschellekens/borb">borb</a>, <a href="https://github.com/py-pdf/pypdf">pypdf</a>, <a href="https://github.com/pdfminer/pdfminer.six">pdfminer</a> and <a href="https://github.com/pymupdf/PyMuPDF/tree/1.21">PyMuPDF</a>.  All failed to correctly parse the document or didn&#39;t provide the data to parse the information I need.</p>
@@ -153,6 +160,7 @@
     </ul>
       <p>The header information is checked on every page in case there was an anomaly in conversion, it is likely that at least one of the pages was converted correctly.  Each element of the xml document is checked against the above conditions and the matching information is saved into lists of tuples which are later converted into dataframes for output.  In this case, they are later used as input to a SQLite database.</p>
 
+      <a id='parsing-positions-link'></a>
       <h3 class='proj' id="parsing-positions">Parsing Positions</h3>
       <hr class="fade-left">
       <p>Beginning this project I expected this task to be the most difficult but once I found the correct method it was relatively straightforward.  My first crack at identifying the locations of the circles was to use <a href="https://docs.opencv.org/3.4/dd/d1a/group__imgproc__feature.html#ga47849c3be0d0406ad3ca45db65a25d2d">OpenCV&#39;s HoughCircles</a>, this seems perfectly reasonable to me as &#39;circle&#39; is even in the name.  It took a couple of minutes to get my first &#39;results&#39; but I spent hours after that trying to get it to correctly recognize circles in the colour masks that I had created.  All combinations of minimum radius, maximum radius, and tuning parameters produced an image that recognized a few of the stones but would have erroneous circles scattered around the rest of the image.  I attempted increasing and decreasing the image resolution as well as only parsing a single position but none of the methods provided useful results.</p>
@@ -163,16 +171,20 @@
       <p>Another interesting aspect of the position images is that the most recently thrown stone has a larger border, resulting in a slightly smaller stone fill/contour.  I added the contour size information to my database in an update and can now fairly reliably distinguish the thrown stone from the stones that were already on the ice.</p>
       <p>The individual frames are then identified by finding bounding boxes of a particular size.  The exact location of the house within the frame is determined using the direction of play and the size of the frame.  Then the positions of all stones in each frame are calculated relative to the centre of the house.  The result of this is a list of stones along with their x and y displacement from the center of the house, their colour, and their size.  This is the main output of the image parsing function.</p>
       
+      <a id='parsing-summary-link'></a>
       <h3 class='proj' id="parsing-summary">Parsing Summary</h3>
       <hr class="fade-left">
       <p>I had a couple of small sets of pdfs that I was using for testing that only took a few minutes but to read the data from the 2165 pdfs takes roughly 4.5 hours at a rate of 8 pdf documents per minute.  This does include the next step of ingesting the data into a SQLite database(2.8% of total time) but overall I am satisfied with this time.  It may seem long but in theory this only has to be done once and 64% of the duration is spent converting the pdf to xml and to high resolution images.  I did some testing with lower resolution conversions but it significantly impacted the accuracy and completeness of the stone detection due to the small size of the stones.</p>
 
+      <a id='populating-sqlite-database-link'></a>
       <h2 class='proj' id="populating-sqlite-database">Populating SQLite Database</h2>
+      <a id='schema-link'></a>
       <h3 class='proj' id="schema">Schema</h3>
       <hr class="fade-left">
       <p>The schema I designed for this data splits the events, matches, and ends in a fairly straightforward manner.  I then created a record in the throw table for each throw made in an end and a separate record for each position in the end.  I first considered storing the throw and position data in a single record/table but that schema is unable to store a position that is not associated with a throw.  A pre-positioned set of stones could be stored but would have null values for all of the throw data and just complicate parsing.</p>
       <img src="/projects/curling/assets/schema.png" alt="SQLite Schema">
 
+      <a id='populating-database-link'></a>
       <h3 class='proj' id="populating-database">Populating Database</h3>
       <hr class="fade-left">
       <p>The populating of the database occurs in a similarly nested manner to the identification of the pdf documents.  It takes the various dataframes and lists from the parsing stage and follows the pseudocode structure below.</p>
@@ -197,6 +209,7 @@
         Create player record whether gender is known or not
       </code></pre><p>This system mostly ignores the complicated web that is curling teams and just sticks to nationality.</p>
 
+      <a id='fun-with-graphs-link'></a>
       <h2 class='proj' id="fun-with-graphs">Fun with Graphs</h2>
       <hr class="fade-left">
       <p>With all of the data collected and stored in the database it is easy to query and sort data for analysis.  Below are a number of plots that I have generated along with some notes.  The Jupyter notebook containing all of these plots and a few extra can be found on Github.</p>
