@@ -115,18 +115,20 @@ header ul li
   margin: 0;
 }
 
-header ul a
+header ul li a
 {
-  color: var(--medium-background);
+  /*color: var(--medium-background);*/
+  color: var(--text);
   text-decoration: none;
   padding: 0 0.5rem;
 }
 
-header ul a:hover
+header ul li a:hover
 {
-  text-decoration: underline;
+  /*color: var(--text);*/
+  color: var(--accent);
+  text-decoration: none;
 }
-
 
 a.monogram
 { /* Monogram is fixed in place, tried to center the text but not great so far,
