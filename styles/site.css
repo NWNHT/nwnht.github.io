@@ -232,6 +232,7 @@ pre
   word-wrap: break-word;
   white-space: pre-wrap;
   display: inline-block;
+  padding-top: 1rem;
   padding-left: 1rem;
   padding-right: 0;
   margin-left: 2rem;
@@ -339,8 +340,9 @@ figcaption
 @media (min-width: 800px) {
   .content > img
   {
-    max-width: calc(100% - 4rem);
-    margin: 0 2rem;
+    max-width: calc(100%);
+    margin: 0 0; /* I have changed this from 0 2rem and the max-width from 100% - 4rem to 100% and I think it has fixed the images?
+                    There might be issues, there are the weird regions on the right */
   }
 }
 

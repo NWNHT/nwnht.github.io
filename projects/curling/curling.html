@@ -1,0 +1,357 @@
+<!DOCTYPE HTML>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="author" content="Lucas Nieuwenhout">
+    <meta name="description" content="Personal website of Lucas Nieuwenhout.">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#1c1d1c">
+    <link href="/styles/site.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com"> 
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> 
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400&family=Open+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div class="background"></div>
+    <div class="diagonal-overlay"></div>
+    <header>
+      <ul>
+        <li><a href="/projects.html">projects</a></li>
+        <li><a href="/photography.html">photography</a></li>
+        <li><a href="/cycling.html">cycling</a></li>
+      </ul>
+      <a href="/" class="monogram"><p>ln.</p></a>
+    </header>
+    <div class="content">
+      <h1>Curling Shot by Shot Analysis</h1>
+      <hr class="fade">
+
+      <p>I had previously written curling off as a boring sport but the stones aligned and it ended up piquing my interest a couple of times this year.  It is still quite a slow game but this allows you to study the position and make your own &#39;armchair skip&#39; calls as everybody stands around looking at the rocks.  This new interest as well as the fact that it is basically a turn-based game led me to explore it with the data it generates.</p>
+      <p>I was able to find an <a href="https://www.jordanmyslik.com/portfolio/curling-analytics/#menvswomen">article</a> written by Jordan Myslik on his <a href="https://www.jordanmyslik.com">personal website</a> that showed that someone else had a similar idea.  I avoided fully reading the article before conducting my project but I did use his information on where to access the <a href="https://worldcurling.org">World Curling Federation</a>(WCF) data as well as the idea to parse the pdf documents as xml.  Reading the article afterwards it seems that our methods were very similar; likely due to there being an &#39;clear&#39; way to retrieve and parse this data but there is no doubt that my work is at the very least inspired by Jordan&#39;s work.</p>
+      <p>The general process of this project is outlined below:</p>
+      <p>Rough steps of the process:</p>
+      <ul>
+        <li>Downloading the data<ul>
+          <li>Finding the documents</li>
+          <li>downloading the documents</li>
+        </ul>
+        </li>
+          <li>Parsing the data<ul>
+          <li>Parsing text</li>
+          <li>Parsing stone locations</li>
+        </ul>
+        </li>
+        <li>Creation of sqlite database<ul>
+          <li>Schema</li>
+          <li>Insertion</li>
+        </ul>
+        </li>
+        <li>Fun with graphs</li>
+      </ul>
+      <h2 class='proj' id="gathering-data">Gathering Data</h2>
+      <h3 class='proj' id="finding-the-documents">Finding the Documents</h3>
+      <hr class="fade-left">
+
+      <p>The data used in Jordan Myslik&#39;s article as well as my own is data available from the World Curling Federation(WCF) via a path that can&#39;t be intentional: <a href="https://odf2.worldcurling.co/data/">https://odf2.worldcurling.co/data/</a>.  None-the-less, it holds directories containing results and other data for a number(all?, most?) tournaments from 2016 to 2019.  Ideally I would love to get the data up to present day but it is not available from this source.</p>
+      <p>The data of most interest is the &#39;Shot by Shot&#39; documents stored deep within the nested document structure. These documents contain representations of the positions of all of the stones after each throw.(henceforth referred to as frames or positions)  These shot by shot summaries are not available for every match but in the end I was able to gather 2168 of them, 2165 of them being useful.(1 corrupt, the other two forfeit matches)  </p>
+      <p>Aside: It turns out that these shot by shot documents and much of the other data is generated and made available by <a href="https://curlit.com">CURLIT Curling Information Technology</a>.  They are the official results provider for olympic curling and many other top tournaments but unfortunately I have not found a way to gather the data directly from this source.(though I haven&#39;t tried particularly hard)  They provide their own <a href="https://curlit.com/cursstats/default">CURLIT Coach Tool</a> that uses all of their own data and this is what people should actually be using if they are interested in curling analysis.</p>
+      <p>The trickiest part of retrieving this data was sifting through the documents to find the correct directory/path structure.  This repository is clearly used for more than just storing these pdf documents so there are plenty of other documents to work around.</p>
+      <p>After some searching and checking to make sure that the structure is consistent I was able to find the following path structure:</p>
+      <pre style="margin-bottom: 0"><code><span class='hljs-keyword'><span class='hljs-keyword'>/</span></span><span class="hljs-meta-keyword">data</span><span class='hljs-keyword'>/</span><span class="hljs-params">&lt;event&gt;</span><span class='hljs-keyword'>/</span><span class="hljs-params">&lt;match_type&gt;</span><span class='hljs-keyword'>/</span><span class="hljs-params">&lt;session&gt;</span><span class='hljs-keyword'>/</span><span class="hljs-params">&lt;...&gt;</span>Game - Shot_by_Shot<span class="hljs-params">&lt;...&gt;</span>.pdf
+      </code></pre><p>where:</p>
+      <ul>
+        <li><code>&lt;event&gt;</code> is a unique identifier of the event/tournament</li>
+        <li><code>&lt;match_type&gt;</code> is the type of match played.  One of &quot;Men&#39;s Teams&quot;, &quot;Women&#39;s Teams&quot;, &quot;Mixed Teams&quot;, or &quot;Mixed Doubles&quot;</li>
+        <li><code>&lt;session&gt;</code> can be loosely defined as the round number or type of playoff game(semi-final, final, ...)</li>
+        <li>The Shot_by_Shot file name contains some other metadata not relevant for parsing</li>
+      </ul>
+      <p>Within the session directories there are the summary documents that I am looking for and all contain the string &quot;Game - Shot_by_Shot&quot; though I narrowed it to &quot;Shot_by_Shot&quot; to avoid any sillyness that might arise from matching on the spaces.  With this, I wrote a function to navigate this directory structure and find the paths of all files in the relevant paths matching my query.  It loosely follows the pseudocode below.</p>
+      <pre><code><span class='hljs-keyword'>for</span> each directory <span class='hljs-keyword'>in</span> /data/
+  <span class='hljs-keyword'>for</span> all<span class="hljs-built_in"> sub-directories </span>matching one of the match types(Men's Teams, ...)
+    <span class='hljs-keyword'>for</span> all<span class="hljs-built_in"> sub-directories
+      </span><span class='hljs-keyword'>If</span> name contains 'Shot_by_Shot'
+        Add path to list
+      </code></pre><p>The splitting of the searching and downloading of documents made it simpler to test as well as adding a layer of protection in case the download failed halfway through, making it simpler to pick up where it failed.</p>
+      
+      <h3 class='proj' id="downloading-the-data">Downloading the Data</h3>
+      <hr class="fade-left">
+      <p>This process is quite simple as it just requires looping through the saved list of paths saved from the previous step and requesting the indicated document.  I introduced a bit of a delay as to not <a href="https://en.wikipedia.org/wiki/Denial-of-service_attack">DOS</a> their servers and after an hour I had all of the pdfs.  As previously mentioned there was a pdf document that was corrupted so I tried to go back and find the problem but it turns out that the original file is corrupted and there is nothing I can do about it so I just blacklisted it in the parsing of the documents.</p>
+      <pre><code><span class="hljs-keyword">for</span> path <span class="hljs-keyword">in</span> <span>file</span>:
+  <span class="hljs-keyword">if</span> <span>file</span> already downloaded:
+    <span>Continue</span>
+  Download <span>file</span>
+  <span>Save</span> <span>file</span>
+  <span class="hljs-keyword">sleep</span>(delay)
+      </code></pre>
+      <h2 class='proj' id="parsing-the-data">Parsing the Data</h2>
+      <hr class="fade-left">
+      <p>An example of each page of the pdf documents can be seen below.  It is comprised of 1 to 16 positions/frames along with some throw/shot information.  This is topped off with the header that contains match, team, and scoring information.</p>
+      <img src="/projects/curling/assets/shot_by_shot_example.png" alt="Shot by Shot PDF Example">
+      <p>The format of the page is relatively consistent but the content in the header is regularly shuffled around and there are a few different notations used for the throw/shot information.  Additionally, the direction of play switches with each end, the houses vary in colour, some frames/positions are an even number of pixels wide while others are an odd number wide, the representations of the stones vary in size, &#39;ghost&#39; shells are left behind in the position where a stone has been taken out, sometimes there are &#39;shoot-outs&#39; which have a completely different format, Mixed Doubles games have prepositioned stones that have to be considered, among Mixed Doubles games there are two different methods used to lay out the positions, you can&#39;t assume where the prepositioned stones are because they are <a href="https://www.curling.ca/team-canada/mixed-doubles-rankings/mixed-doubles-rules/">occasionally offset</a>, there is no explicit statement about who has the hammer, you cannot assume that there will be a stone in a frame/position, you cannot assume that the centre of the house won&#39;t be covered, the gender of the player is not stated in mixed matches, the score isn&#39;t always the same format and isn&#39;t always a number, and the xml generated from the pdf documents isn&#39;t always valid.</p>
+      <p>The parsing process is a nightmare and borderline not possible if not for the saving graces that the positioning of the text elements relative to eachother is fairly consistent and that the stone colours are always the same shades of red and yellow.</p>
+      <p>The parsing of the text and other elements will be explored in the following sections.</p>
+      
+      <h3 class='proj' id="parsing-text">Parsing Text</h3>
+      <hr class="fade-left">
+      <p>The parsing of the text was the most annoying part of the whole procedure.  Once I was able to get the text information out of the pdf format it was fairly smooth sailing but getting to that point was the issue.  On my way to just using the same method that Jordan Myslik used, I tried to implement <a href="https://github.com/jorisschellekens/borb">borb</a>, <a href="https://github.com/py-pdf/pypdf">pypdf</a>, <a href="https://github.com/pdfminer/pdfminer.six">pdfminer</a> and <a href="https://github.com/pymupdf/PyMuPDF/tree/1.21">PyMuPDF</a>.  All failed to correctly parse the document or didn&#39;t provide the data to parse the information I need.</p>
+      <p>The method I settled on was using the Python <code>os</code> library to use the <a href="https://pdftohtml.sourceforge.net">pdftohtml</a> command line tool on each pdf document.  This is by far the most reliable method that I found but it still has its problems.  First of all it occasionally just outright fails to create an xml document; this was resolved by adding a single retry in the case of failure and this has been rock solid over thousands of documents.  The other issue was that in certain cases the xml that it produced was invalid caused by unterminated <code>&lt;span&gt;</code> elements in the document.  I resolved this by opening the xml files as text, parsing out the erroneous elements, and then proceeding to parse them as xml.</p>
+      <p>Once I had those issues sorted out, all of the text elements are parsed as elements of their respective page with attributes indicating the x and y location of the top left of the element.  An excerpt can be seen below:</p>
+      <pre><code>&lt;page number=<span class="hljs-string">"1"</span> position=<span class="hljs-string">"absolute"</span> top=<span class="hljs-string">"0"</span> left=<span class="hljs-string">"0"</span> height=<span class="hljs-string">"1263"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"892"</span>&gt;
+  ...
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"52"</span> left=<span class="hljs-string">"637"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"100"</span> height=<span class="hljs-string">"12"</span> font=<span class="hljs-string">"6"</span>&gt;St. Jakobshalle Basel&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"52"</span> left=<span class="hljs-string">"196"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"86"</span> height=<span class="hljs-string">"12"</span> font=<span class="hljs-string">"7"</span>&gt;Basel, Switzerland&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"111"</span> left=<span class="hljs-string">"500"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"238"</span> height=<span class="hljs-string">"17"</span> font=<span class="hljs-string">"13"</span>&gt;Round Robin Session <span class="hljs-number">1</span> - Sheet D&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"35"</span> left=<span class="hljs-string">"446"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"291"</span> height=<span class="hljs-string">"17"</span> font=<span class="hljs-string">"19"</span>&gt;World Men<span class="hljs-symbol">'s</span> Curling Championship <span class="hljs-number">2016</span>&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"160"</span> left=<span class="hljs-string">"359"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"177"</span> height=<span class="hljs-string">"20"</span> font=<span class="hljs-string">"23"</span>&gt;Game - Shot by Shot&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"116"</span> left=<span class="hljs-string">"196"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"81"</span> height=<span class="hljs-string">"12"</span> font=<span class="hljs-string">"27"</span>&gt;SAT <span class="hljs-number">2</span> APR <span class="hljs-number">2016</span>&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"129"</span> left=<span class="hljs-string">"196"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"77"</span> height=<span class="hljs-string">"12"</span> font=<span class="hljs-string">"31"</span>&gt;Start <span class="hljs-built_in">Time</span> <span class="hljs-number">14</span>:<span class="hljs-number">00</span>&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"35"</span> left=<span class="hljs-string">"196"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"86"</span> height=<span class="hljs-string">"17"</span> font=<span class="hljs-string">"32"</span>&gt;WMCC <span class="hljs-number">2016</span>&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"227"</span> left=<span class="hljs-string">"795"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"49"</span> height=<span class="hljs-string">"17"</span> font=<span class="hljs-string">"33"</span>&gt;<span class="hljs-keyword">End</span> <span class="hljs-number">1</span>&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"227"</span> left=<span class="hljs-string">"67"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"111"</span> height=<span class="hljs-string">"17"</span> font=<span class="hljs-string">"35"</span>&gt;GER - Germany&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"227"</span> left=<span class="hljs-string">"449"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"122"</span> height=<span class="hljs-string">"17"</span> font=<span class="hljs-string">"38"</span>&gt;SUI - Switzerland&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"228"</span> left=<span class="hljs-string">"280"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"8"</span> height=<span class="hljs-string">"17"</span> font=<span class="hljs-string">"1"</span>&gt;<span class="hljs-number">0</span>&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"227"</span> left=<span class="hljs-string">"663"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"8"</span> height=<span class="hljs-string">"17"</span> font=<span class="hljs-string">"1"</span>&gt;<span class="hljs-number">0</span>&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"228"</span> left=<span class="hljs-string">"310"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"8"</span> height=<span class="hljs-string">"17"</span> font=<span class="hljs-string">"1"</span>&gt;<span class="hljs-number">0</span>&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"227"</span> left=<span class="hljs-string">"693"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"8"</span> height=<span class="hljs-string">"17"</span> font=<span class="hljs-string">"1"</span>&gt;<span class="hljs-number">1</span>&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"228"</span> left=<span class="hljs-string">"295"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"9"</span> height=<span class="hljs-string">"17"</span> font=<span class="hljs-string">"1"</span>&gt;+&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"227"</span> left=<span class="hljs-string">"678"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"9"</span> height=<span class="hljs-string">"17"</span> font=<span class="hljs-string">"1"</span>&gt;+&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"254"</span> left=<span class="hljs-string">"46"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"8"</span> height=<span class="hljs-string">"15"</span> font=<span class="hljs-string">"3"</span>&gt;<span class="hljs-number">1</span>&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"501"</span> left=<span class="hljs-string">"166"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"5"</span> height=<span class="hljs-string">"10"</span> font=<span class="hljs-string">"4"</span>&gt;<span class="hljs-number">4</span>&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"501"</span> left=<span class="hljs-string">"148"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"15"</span> height=<span class="hljs-string">"10"</span> font=<span class="hljs-string">"4"</span>&gt;<span class="hljs-keyword">Out</span>&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"501"</span> left=<span class="hljs-string">"54"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"21"</span> height=<span class="hljs-string">"10"</span> font=<span class="hljs-string">"39"</span>&gt;Front&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"488"</span> left=<span class="hljs-string">"54"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"79"</span> height=<span class="hljs-string">"10"</span> font=<span class="hljs-string">"42"</span>&gt;SUI: GEMPELER S&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"254"</span> left=<span class="hljs-string">"183"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"8"</span> height=<span class="hljs-string">"15"</span> font=<span class="hljs-string">"3"</span>&gt;<span class="hljs-number">2</span>&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"501"</span> left=<span class="hljs-string">"303"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"5"</span> height=<span class="hljs-string">"10"</span> font=<span class="hljs-string">"4"</span>&gt;<span class="hljs-number">4</span>&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"501"</span> left=<span class="hljs-string">"285"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"15"</span> height=<span class="hljs-string">"10"</span> font=<span class="hljs-string">"4"</span>&gt;<span class="hljs-keyword">Out</span>&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"501"</span> left=<span class="hljs-string">"191"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"21"</span> height=<span class="hljs-string">"10"</span> font=<span class="hljs-string">"43"</span>&gt;Draw&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"488"</span> left=<span class="hljs-string">"191"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"87"</span> height=<span class="hljs-string">"10"</span> font=<span class="hljs-string">"50"</span>&gt;GER: SCHWEIZER S&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"254"</span> left=<span class="hljs-string">"320"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"8"</span> height=<span class="hljs-string">"15"</span> font=<span class="hljs-string">"3"</span>&gt;<span class="hljs-number">3</span>&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"501"</span> left=<span class="hljs-string">"440"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"5"</span> height=<span class="hljs-string">"10"</span> font=<span class="hljs-string">"4"</span>&gt;<span class="hljs-number">4</span>&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"501"</span> left=<span class="hljs-string">"422"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"15"</span> height=<span class="hljs-string">"10"</span> font=<span class="hljs-string">"4"</span>&gt;<span class="hljs-keyword">Out</span>&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"501"</span> left=<span class="hljs-string">"328"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"78"</span> height=<span class="hljs-string">"10"</span> font=<span class="hljs-string">"57"</span>&gt;Promotion Take-<span class="hljs-keyword">out</span>&lt;/<span class="hljs-literal">text</span>&gt;
+  &lt;<span class="hljs-literal">text</span> top=<span class="hljs-string">"488"</span> left=<span class="hljs-string">"328"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"79"</span> height=<span class="hljs-string">"10"</span> font=<span class="hljs-string">"60"</span>&gt;SUI: GEMPELER S&lt;/<span class="hljs-literal">text</span>&gt;
+  ...
+&lt;/page&gt;
+  &lt;page number=<span class="hljs-string">"2"</span> position=<span class="hljs-string">"absolute"</span> top=<span class="hljs-string">"0"</span> left=<span class="hljs-string">"0"</span> height=<span class="hljs-string">"1263"</span> <span class="hljs-literal">width</span>=<span class="hljs-string">"892"</span>&gt;
+          ...
+      </code></pre><p>The keen-eyed reader might notice that the parsing of the text elements is not particularly intuitive and upon inspection of multiple xml files it becomes clear that the order of the elements is not a reliable method to correctly identify the desired information.  The worst case of this is in the header which contains an assortment of information about the match including the event, location, date, time, and sheet identifier.  Directly under the header is a section that includes the team names, current match scores, and the number of points scored in the end.  Finally, the main body of the pdf is 1-16 sets of player name, throw number, throw type, throw rating, and sometimes the throw spin.  </p>
+      <p>The main technique I used to parse the correct information out of the document was identifying elements with unique characteristics(position or contents), and then using them as a datum to find elements relative to their position.  A summary of the identification methods is below:</p>
+      <ul>
+      <li><b>Event Name</b>: Longest string in the header that ends with four numbers. Loose method as this is not critical or actionable information.</li>
+      <li><b>Event Time</b>: In the header region and contains the string &#39;Start Time&#39;.</li>
+      <li><b>Date</b>: Identified by a fixed region.</li>
+      <li><b>Team Names</b>: Currently taken from the file name but could be taken by fixed region or beginning of player string.</li>
+      <li><b>Sheet Identifier</b>: In the header region and contains the string &#39;Sheet&#39;.</li>
+      <li><b>End Score</b>: Found by region but there are two parsing cases: one case parses as a mathematical expression which can be computed using <code>eval()</code>, the other requires conversion to integers before summing.  These values can sometimes be alphabetic so they must be ignored as they don&#39;t provide any additional information.(Ex: &#39;W&#39;, &#39;L&#39;)</li>
+      <li><b>Player Name</b>: These are the only strings in the body region that contain a semicolon.</li>
+      <ul style="margin-left: 0">
+        <li><b>Throw Number</b>: Up and to the left of each player name.</li>
+        <li><b>Throw Type</b>: Directly below each player name.</li>
+        <li><b>Throw Rating</b>: Right of the player name and either contains a &#39;%&#39; or is a single character[0-4].</li>
+        <li><b>Throw Spin</b>: This was ignored as it is sometime given as a word and sometimes as a symbol that would not be parsed.  It isn&#39;t terribly interesting information either.</li>
+      </ul>
+    </ul>
+      <p>The header information is checked on every page in case there was an anomaly in conversion, it is likely that at least one of the pages was converted correctly.  Each element of the xml document is checked against the above conditions and the matching information is saved into lists of tuples which are later converted into dataframes for output.  In this case, they are later used as input to a SQLite database.</p>
+
+      <h3 class='proj' id="parsing-positions">Parsing Positions</h3>
+      <hr class="fade-left">
+      <p>Beginning this project I expected this task to be the most difficult but once I found the correct method it was relatively straightforward.  My first crack at identifying the locations of the circles was to use <a href="https://docs.opencv.org/3.4/dd/d1a/group__imgproc__feature.html#ga47849c3be0d0406ad3ca45db65a25d2d">OpenCV&#39;s HoughCircles</a>, this seems perfectly reasonable to me as &#39;circle&#39; is even in the name.  It took a couple of minutes to get my first &#39;results&#39; but I spent hours after that trying to get it to correctly recognize circles in the colour masks that I had created.  All combinations of minimum radius, maximum radius, and tuning parameters produced an image that recognized a few of the stones but would have erroneous circles scattered around the rest of the image.  I attempted increasing and decreasing the image resolution as well as only parsing a single position but none of the methods provided useful results.</p>
+      <p>Luckily I was able to fall back on the ol&#39;reliable <a href="https://docs.opencv.org/3.4/d3/dc0/group__imgproc__shape.html#ga17ed9f5d79ae97bd4c7cf18403e1689a">findContours</a> which returns a list of all sets of connected pixels in an image, known as contours.  This was extremely effective as I could reliably distinguish the stones from the background(ice/house); however, this leaves the actual identification and classification of the circles up to me.  I selected for only the full size stones(ignoring the small representations) by filtering on the area of the contour as well as the dimensions of the bounding box.</p>
+      <p>The small stone representations do not go unused though, their locations and count are used to identify the direction of play and which team has the hammer.  This is made more complicated by the different format of Mixed Doubles matches but just requires a few extra cases.</p>
+      <p>The locations of the stones are complicated by the precense of the &#39;ghost&#39; stones that have been removed from the house as shown in the images below.  These sometimes overlap to form strange shapes or they are interpretted as part of the same contour as a stone.  In these cases I am just rejecting the contour which results in some missing stones but is likely better than having stones in incorrect or invalid positions.  There is potential for using the locations of stones in the previous position to assist in identification but it becomes very difficult because the stones aren&#39;t individually identified.  If I had a lot of time then I am sure I could sort something out using the previous locations, type of throw and rating of the throw to identify some of the stones.</p>
+      <div><img style='display: inline; max-width: 50%' src="/projects/curling/assets/Overlap1.png" alt="SQLite Schema"><img style='display: inline; max-width: 50%' src="/projects/curling/assets/Overlap2.png" alt="SQLite Schema"></div>
+      <p>Another interesting aspect of the position images is that the most recently thrown stone has a larger border, resulting in a slightly smaller stone fill/contour.  I added the contour size information to my database in an update and can now fairly reliably distinguish the thrown stone from the stones that were already on the ice.</p>
+      <p>The individual frames are then identified by finding bounding boxes of a particular size.  The exact location of the house within the frame is determined using the direction of play and the size of the frame.  Then the positions of all stones in each frame are calculated relative to the centre of the house.  The result of this is a list of stones along with their x and y displacement from the center of the house, their colour, and their size.  This is the main output of the image parsing function.</p>
+      
+      <h3 class='proj' id="parsing-summary">Parsing Summary</h3>
+      <hr class="fade-left">
+      <p>I had a couple of small sets of pdfs that I was using for testing that only took a few minutes but to read the data from the 2165 pdfs takes roughly 4.5 hours at a rate of 8 pdf documents per minute.  This does include the next step of ingesting the data into a SQLite database(2.8% of total time) but overall I am satisfied with this time.  It may seem long but in theory this only has to be done once and 64% of the duration is spent converting the pdf to xml and to high resolution images.  I did some testing with lower resolution conversions but it significantly impacted the accuracy and completeness of the stone detection due to the small size of the stones.</p>
+
+      <h2 class='proj' id="populating-sqlite-database">Populating SQLite Database</h2>
+      <h3 class='proj' id="schema">Schema</h3>
+      <hr class="fade-left">
+      <p>The schema I designed for this data splits the events, matches, and ends in a fairly straightforward manner.  I then created a record in the throw table for each throw made in an end and a separate record for each position in the end.  I first considered storing the throw and position data in a single record/table but that schema is unable to store a position that is not associated with a throw.  A pre-positioned set of stones could be stored but would have null values for all of the throw data and just complicate parsing.</p>
+      <img src="/projects/curling/assets/schema.png" alt="SQLite Schema">
+
+      <h3 class='proj' id="populating-database">Populating Database</h3>
+      <hr class="fade-left">
+      <p>The populating of the database occurs in a similarly nested manner to the identification of the pdf documents.  It takes the various dataframes and lists from the parsing stage and follows the pseudocode structure below.</p>
+      <pre><code><span class="hljs-keyword">for</span> each event:
+  Create event <span class="hljs-built_in">record
+  <span class="hljs-keyword">for</span> each match:
+    Create match <span class="hljs-built_in">record
+    <span class="hljs-keyword">for</span> each end:
+      Create end <span class="hljs-built_in">record
+      <span class="hljs-keyword">for</span> each throw:
+        Create player <span class="hljs-built_in">record if required
+        Create throw <span class="hljs-built_in">record
+      <span class="hljs-keyword">for</span> each position:
+        Create position <span class="hljs-built_in">record
+        <span class="hljs-keyword">for</span> each stone:
+          Create stone <span class="hljs-built_in">record
+      </code></pre><p>One slightly interesting part of this section is the creation of player records.  Since the summary pdfs include Men&#39;s, Women&#39;s, and Mixed matches, it is not always guaranteed that the gender of a player can be determined.  The gender of players is quite obvious when parsing a Men&#39;s or Women&#39;s match but when parsing a Mixed Doubles or Mixed Teams match there is no indication of the player&#39;s gender.  Using the logic of the pseudocode below I add and update the player records as they are found.  If a player is first found in a mixed game(with unknown gender) but later found in a Men&#39;s/Women&#39;s game then the record is updated with the new data.</p>
+      <pre><code><span class="hljs-keyword">if</span> player exists <span class="hljs-keyword">in</span> db:
+  <span class="hljs-keyword">if</span> (player gender is now known) <span class="hljs-keyword">and</span> (player record has unknown gender):
+    Update player record with gender
+      <span class="hljs-keyword">else</span>:
+        Create player record whether gender is known or not
+      </code></pre><p>This system mostly ignores the complicated web that is curling teams and just sticks to nationality.</p>
+
+      <h2 class='proj' id="fun-with-graphs">Fun with Graphs</h2>
+      <hr class="fade-left">
+      <p>With all of the data collected and stored in the database it is easy to query and sort data for analysis.  Below are a number of plots that I have generated along with some notes.  The Jupyter notebook containing all of these plots and a few extra can be found on Github.</p>
+      <p>A lot of the plots are best displayed in an extremely wide aspect ratio but my website isn&#39;t really made for this so in case they are illegibly small you can open the image in a new tab.</p>
+
+      <h2 class='proj' id="heatmaps">Heatmaps</h2>
+      <h3 class='proj' id="heatmap-of-thrown-stone-by-throw-number">Heatmap of Thrown Stone by Throw Number</h3>
+      <hr class="fade-left">
+      <img src="/projects/curling/assets/Heatmap_Quads.png" alt="">
+      <ul>
+        <li>Heatmap of the stone thrown in each position, does not display any stones already in position.(that&#39;s the next plot)</li>
+        <li>Very interesting to see the alternating pattern between shooting a draw or center guard and shooting a corner guard for the first approximately 9 shots.</li>
+        <li>Very interesting alternating pattern between throwing draws and center guards vs. throwing draws and corner guards.<ul>
+          <li>I have looked this up and apparently the corner guard is favoured by the team with the hammer(even throws) in an attempt to score more than one point with the hammer.</li>
+        </ul>
+        </li>
+        <li>With all of the different positions that occur, just tossing a stone in the center is always the most likely throw, with the distribution getting tighter and tighter as the end continues.</li>
+      </ul>
+
+      <h3 class='proj' id="heatmap-of-stone-positions-by-throw-number">Heatmap of Stone Positions by Throw Number</h3>
+      <hr class="fade-left">
+      <img src="/projects/curling/assets/Heatmap_Quads_pos.png" alt="">
+      <ul>
+        <li>This is a heatmap of all of the stones in a position instead of just the stone that was thrown.</li>
+        <li>The pattern of the thrown stones can be seen here but gets diluted by the &#39;residual&#39; stones as the end continues.</li>
+        <li>A triangular pattern begins to develop &#39;downstream&#39; of the corner guards as they get displaced.</li>
+        <li>There are also significant patterns that develop from stones knocked diagonally out of the button.</li>
+      </ul>
+
+      <h3 class='proj' id="heatmap-of-thrown-stone-by-throw-number-mixed-doubles">Heatmap of Thrown Stone by Throw Number - Mixed Doubles</h3>
+      <hr class="fade-left">
+      <img src="/projects/curling/assets/Heatmap_Doub.png" alt="">
+      <ul>
+        <li>Same method as first chart, except now there are pre-positioned stones.  These are typically placed along the central axis but once a game each team can choose to use an off-axis configuration.  This is more clear in the next plot.</li>
+        <li>I find it strange that there is a far less established pattern with these positions besides just shooting for the button.  There are some trails visible around the pre-positioned stone in the house but otherwise the heatmap is fairly straight-forward.</li>
+      </ul>
+
+      <h3 class='proj' id="heatmap-of-stone-positions-by-throw-number-mixed-doubles">Heatmap of Stone Positions by Throw Number - Mixed Doubles</h3>
+      <hr class="fade-left">
+      <img src="/projects/curling/assets/Heatmap_Doub_pos.png" alt="">
+      <ul>
+        <li>The positions of the pre-positioned stones can be seen as bright blue points in the first frame and in a lot of cases those stones remain untouched.</li>
+        <li>There is also a unique pattern around the center stone as it is very common to draw a stone directly into the button in front of the stone in the first few throws.  The separation between the high density positions is a result of the size of the curling stones, two touching stones will have their centers approximately 28cm apart.</li>
+      </ul>
+
+      <h3 class='proj' id="throw-type-heatmap">Throw Type Heatmap</h3>
+      <hr class="fade-left">
+      <img src="/projects/curling/assets/Shot_Type_Heatmap.png" alt="">
+      <ul>
+        <li>Heatmap of stone positions separated by the classification of the throw.</li>
+        <li>I think my favourite one is the &#39;Through&#39; type but I think the most distinct pattern is for &#39;Front&#39;, showing the three lanes for the common &#39;guards&#39;.  I believe that guards are differentiated from front stones as guards are protecting a stone that is already in the house while a front shot is proactive.</li>
+      </ul>
+
+      <h2 class='proj' id="summaries">Summaries</h2>
+      <h3 class='proj' id="end-by-end-summary">End by End Summary</h3>
+      <hr class="fade-left">
+      <img src="/projects/curling/assets/Match_by_End.png" alt="">
+      <ul>
+        <li>This shows the positions of all stones thrown in a single end.  There should always fewer than 17 stones in each end(11 with Mixed Doubles), however, it is highly likly that it is lower due to Through shots or other shots that result in the thrown stone being removed from the ice.</li>
+        <li>This particular game (NZL vs. AUS) shows a few good examples of different types of ends.  The 7th and 8th are notable as all of the stones are located in the house in contrast to the other games which use a number of guards.  This represents an end where the number of stones on the ice remains low for the majority of the ground and most of the shots are draws or take-outs.</li>
+        <li>It is mostly interesting to see how activity becomes focused on a particular region of the ice.  While this is often a center guard or the button, it also occurs in other locations.</li>
+      </ul>
+
+      <h3 class='proj' id="match-summary">Match Summary</h3>
+      <hr class="fade-left">
+      <img src="/projects/curling/assets/Match_Summary.png" alt="">
+      <ul>
+        <li>This plot is mostly a curiosity but could be interesting to make as a poster of some sort to be able to sumarize an entire match.  The blue stones represent a stone just thrown by red and the green stones are stones just thrown by yellow.</li>
+        <li>Being most familiar with chess where the first 10-20 moves of a game have been seen before the thing I find most interesting here is the variation in the first and second shots of the match.  Though something that must be considered is that the state of the game is not identical at the beginning of each end as a team may be behind and trying to score more points, ahead and trying to minimize points, trying to keep the hammer, or some other tactic I don&#39;t know about.  </li>
+      </ul>
+
+      <h3 class='proj' id="stone-location-by-throw-class">Stone Location by Throw Class</h3>
+      <hr class="fade-left">
+      <img src="/projects/curling/assets/Player_Zones.png" alt="">
+      <ul>
+        <li>This is just a plot for fun that shows all of the stones thrown by a player(that I have access to), coloured by a loosely defined throw type and sized by the accuracy rating.</li>
+        <li>Not much to say and not very informative.</li>
+      </ul>
+
+      <h2 class='proj' id="throw-ratings">Throw Ratings</h2>
+      <h3 class='proj' id="rating-by-shot-type">Rating by Shot Type</h3>
+      <hr class="fade-left">
+      <img src="/projects/curling/assets/Shot_Type_Distribution.png" alt="">
+      <ul>
+        <li>The average rating of each shot for all players, and its distribution.  Some shots have not been made by all players so they have fewer ratings.</li>
+        <li>This is a crude way of displaying the relative difficulty of each type of shot.  It must also be considered that some shots are more strictly rated than others though this also correlates with difficulty so I don&#39;t think it has much of an effect.  Also more complicated shots will likely only be played by more skilled players so their ratings are artificially higher than if all players attempted those shots.</li>
+      </ul>
+
+      <h3 class='proj' id="rating-by-shot-class">Rating by Shot Class</h3>
+      <hr class="fade-left">
+      <img src="/projects/curling/assets/Shot_Class_Distribution.png" alt="">
+      <ul>
+        <li>This is identical to the above chart except the shots are now divided by a loose definition of the &#39;class&#39; of the shot.</li>
+        <li>As I would expect, guards and front shots are relatively simpler and have a higher average rating while draws and the specialy miscelaneous shots have a lower rating.</li>
+      </ul>
+
+      <h3 class='proj' id="average-rating-by-throw-number">Average Rating by Throw Number</h3>
+      <hr class="fade-left">
+      <img src="/projects/curling/assets/Rating_by_Throw_Number.png" alt="">
+      <ul>
+        <li>This is a plot that I thought would be more interesting when I thought that there would be a more prescribed throw pattern to the game but after viewing the heatmaps it is clear that the chaos of the positions largely overpowers most patterns with the exception of the odd throws having a higher proportion of guards/takeouts and raising their rating.</li>
+        <li>It is pretty clear that the high accuracy of the first few throws is a result of the small number of stones in the position and relative simplicity of the shot.  This is backed up by the next plot.</li>
+      </ul>
+
+      <h3 class='proj' id="average-rating-by-stone-count">Average Rating by Stone Count</h3>
+      <hr class="fade-left">
+      <img src="/projects/curling/assets/Rating_by_Stone_Count.png" alt="">
+      <ul>
+        <li>The average rating of throws with respect to the number of stones already in the position.  Note that the sample size decreases dramatically as the number of stones approaches the number of throws.</li>
+        <li>Predictably the accuracy drops as the number of stones increases.  Likely due to the complexity of the position requiring more complicated throws as well as making it difficult to shoot typically simple shots.</li>
+      </ul>
+
+      <h3 class='proj' id="percentage-of-throw-type-by-throw-number">Percentage of Throw Type by Throw Number</h3>
+      <hr class="fade-left">
+      <img src="/projects/curling/assets/Throw_Proportion.png" alt="">
+      <ul>
+        <li>The percentage of throws of each type by throw number, showing the likelihood of a type of throw as an end progresses.</li>
+        <li>The use of prepositioned stones in the Mixed Doubles matches leads to a much higher percentage of draws.  This is also affected by the <a href="https://www.curling.ca/team-canada/mixed-doubles-rankings/mixed-doubles-rules/">modified free guard rule</a>.</li>
+        <li>This also shows the alternating pattern of draws and guards/take-outs in the full length games.</li>
+        <li>There is a significant spike of clearing shots with the hammer throw, I suspect this is a typical pattern of gaining points by removal of an opponent&#39;s closer stone.</li>
+      </ul>
+
+      <h3 class='proj' id="player-rating-vs-throw-count">Player Rating vs. Throw Count</h3>
+      <hr class="fade-left">
+      <p>Assorted plots.  If this held more useful and up-to-date information then I might be bothered to create some sort of interactive app/plot to highlight players/teams.</p>
+      <img src="/projects/curling/assets/Player_Rating_Count_Player.png" alt="">
+      <hr class="fade" style="margin: 1rem">
+      <img src="/projects/curling/assets/Player_Rating_Count_Country.png" alt="">
+      <hr class="fade" style="margin: 1rem">
+      <img src="/projects/curling/assets/Player_Rating_Count_Player_List.png" alt="">
+
+      <h2 class='proj' id="scores">Scores</h2>
+      <h3 class='proj' id="team-match-score-difference">Team Match Score Difference</h3>
+      <hr class="fade-left">
+      <img src="/projects/curling/assets/Team_Match_Score.png" alt="">
+      <ul>
+        <li>The average as well as upper and lower limits of match score difference for each nation with at least 5 matches.</li>
+        <li>Russia had a particularly successful 26-0 game against Qatar.</li>
+        <li>All countries right of France have a positive average match score difference.</li>
+        <li>Canada is clearly the best.</li>
+      </ul>
+
+      <h3 class='proj' id="team-end-scores">Team End Scores</h3>
+      <hr class="fade-left">
+      <img src="/projects/curling/assets/Team_End_Score.png" alt="">
+      <ul>
+        <li>The average as well as upper and lower limits of end score difference for each nation with at least 40 ends.</li>
+        <li>After some playing around with geodata there doesn&#39;t seem to be any significant correlation with latitude(r=0.053, p=.750) as some suppose, there is actually a higher correlation with longitude(r=0.142, p=.389).</li>
+        <li>Canada stays winning.</li>
+      </ul>
+
+
+
+
+      <hr class="fade">
+    </div>
+  </body>
+</html>
