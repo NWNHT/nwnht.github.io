@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="author" content="Lucas Nieuwenhout">
+    <meta name="description" content="Personal website of Lucas Nieuwenhout.">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#1c1d1c">
+    <link href="/styles/site.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com"> 
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> 
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400&family=Open+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div class="background"></div>
+    <div class="diagonal-overlay"></div>
+    <header>
+      <ul>
+        <li><a href="/projects.html">projects</a></li>
+        <li><a href="/photography.html">photography</a></li>
+        <li><a href="/cycling.html">cycling</a></li>
+      </ul>
+      <a href="/" class="monogram"><p>ln.</p></a>
+    </header>
+    <div class="content">
+      <h1>Curling Match Prediction</h1>
+      <hr class="fade">
+
+      <p>After creating the curling game database as detailed in my previous article, I did some additional analysis using scikit-learn and PyTorch.  I first made a better prediction of who had the hammer for each end and then applied some algorithms and a neural net to predict the winner.</p>
+      <p>The original <a href="https://github.com/NWNHT/curling/blob/main/src/predictions.ipynb">notebook</a> and a <a href="https://github.com/NWNHT/curling/blob/main/docs/predictions_notebook/predictions_ipynb.pdf">pdf conversion</a> are available in the <a href="https://github.com/NWNHT/curling">Github repo</a>.</p>
+
+      <h2 class="proj">Hammer Prediction</h2>
+      <hr class="fade-left">
+      <p>After creating the database in my <a href='/projects/curling/curling.html'>previous article</a> I was doing some analysis and noticed that the analysis of hammer throw wasn&#39;t aligning with expectations and statistics available from other sources.  Upon further examination and spot checking a few matches from different tournaments I found that my previous method of counting the small stones in the first frame was not very accurate.  The stones that it is detecting are quite small and are sometimes counted incorrectly.</p>
+      <p>My backup plan for hammer detection is somewhat more complex.  The first layer of detection is checking what colour the stone is in the first position after the first throw.  This can then just be inverted to know that the opposite colour has the hammer.  This is complicated slightly by mixed doubles matches where there are already stones in the house but I addressed this by counting the stones.  This succeeded in detecting the hammer for 68% of ends, leaving 32% unidentified.</p>
+      <p>The issue with these 32% of ends is that sometimes the first stone does not remain in the position or is not correctly detected.  This then falls back on the second layer which checks the score of the previous end, the non-scoring team of course getting the hammer in the current end.  This second layer brings the detection rate up to 95.68%.  For the sake of fastidiousness in case the previous end was a blank I then checked back another end which brought the detection rate up to 95.72%.  Another layer does not increase precision in my dataset.</p>
+      <p>I then added another item to the <code>End</code> records in the database to store this updated prediction.  For analysis one could filter for only ends with a known hammer colour or if the accuracy is less important than number of examples then could coalesce the new prediction with the old one.</p>
+
+      <h2 class="proj">Analysis</h2>
+      <hr class="fade-left">
+      <p>With the better hammer colour prediction I felt better using it for some analysis.  I used some scikit-learn models as well as a PyTorch model to input the ratings for each player on the team as well as who had the hammer in the first few ends to predict the winner of the match.  After creating a few ensembles and tuning some hyperparameters I was able to get roughly 60% prediction rate on the match prediction.  I think the low score can be put down to the inputs not having too much predictive power.</p>
+      <p>Predicting with only the player resulted in a 50% prediction, random chance, and the hammer colour information in the first few ends is mostly an identifier of who has already scored in those ends and they are clearly more likely to win.</p>
+      <p>See the semi-commented notebook linked above for the models and results.</p>
+
+      <hr class="fade">
+    </div>
+  </body>
+</html>
