@@ -55,9 +55,8 @@
       <p>The unfortunate part of trying to find similar positions is that curling can be extremely sensitive to stone position.  A single stone shifted a few inches can change the position.  When you increase the number of stones in a position above two it becomes extremely difficult to find positions that are sufficiently similar and comparisons become far less relevant.  An idea to mitigate this would be to provide an interface that allows for placing stones and specifying the error for each stone individually.  This would allow the user to prioritize the location of a couple stones and identify other stones as less relevant.</p>
       <ul><li>As I am not particularly inspired by interfaces this will be left as an exercise for the reader...</li></ul>
 
-      <hr class="fade">
-
       <p>Anyway, below is an example of its use.</p>
+      <hr class="fade">
       <br>
       <p>The position ID and a &#39;score threshold&#39; are used to parse through all of the positions and calculate the scores.  I also created a quick function to plot the score distribution as seen below.</p>
 
@@ -70,8 +69,8 @@
       <p>With the positions selected you can plot them all to see how similar they are and then plot all of the next positions to view the distribution of &#39;responses&#39;.</p>
 
       <div>
-        <img style='display: inline; max-width: 49.7%' src="/projects/curling_predict_winner/assets/Similar_Positions.png" alt="Similar position superposition.">
-        <img style='display: inline; max-width: 49.7%' src="/projects/curling_predict_winner/assets/Next_Positions_Summary.png" alt="Next position superposition.">
+        <img style='display: inline; max-width: 49.3%' src="/projects/curling_predict_winner/assets/Similar_Positions.png" alt="Similar position superposition.">
+        <img style='display: inline; max-width: 49.3%' src="/projects/curling_predict_winner/assets/Next_Positions_Summary.png" alt="Next position superposition.">
       </div>
 
       <p>Once the selectivity has been tuned then all of the next throws and positions can be plotted in a summary to show the outcomes.  The unfortunate part of this database is that it doesn&#39;t track the &#39;identity&#39; of the stones between positions so it is impossible to know how each of the stones got from one position to the next.  The best I can do is colour the most recently thrown stone if it is detectable in the position.</p>

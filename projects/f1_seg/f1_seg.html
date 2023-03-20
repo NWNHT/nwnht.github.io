@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="author" content="Lucas Nieuwenhout">
+    <meta name="description" content="Personal website of Lucas Nieuwenhout.">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#1c1d1c">
+    <link href="/styles/site.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com"> 
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> 
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400&family=Open+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div class="background"></div>
+    <div class="diagonal-overlay"></div>
+    <header>
+      <ul>
+        <li><a href="/projects.html">projects</a></li>
+        <li><a href="/photography.html">photography</a></li>
+        <li><a href="/cycling.html">cycling</a></li>
+      </ul>
+      <a href="/" class="monogram"><p>ln.</p></a>
+    </header>
+    <div class="content">
+      <h1>F1 Car Semantic Segmentation</h1>
+      <hr class="fade">
+
+      <p>Before 2019 I couldn&#39;t have told you who Lewis Hamilton or Fernando Alonso are but after hearing about F1 on <a href="http://www.hellointernet.fm/podcast/127">a podcast</a> I quickly became enamored with the technological complexity and sporting achievements featured in the sport.  The combination of world class athletes and multi-million dollar machines reach speeds over 350km/h and more impressively sustain 6g horizontal forces while cornering at 250km/h.</p>
+      <p>Since my introduction to the sport I have watched every race and consumed an unreasonable amount of technical and sporting analysis in between.  One of the draws of the sport is the incredible depth that can be applied to analysis of any of its aspects.  Even the seemingly trivial components of the sport have been heavily iterated and optimized by the teams.  This <a href="https://twitter.com/ScarbsTech/status/1631320407293804545">obsession</a> is matched by the fans, <a href="https://www.youtube.com/@chainbear">making videos</a>, <a href="https://www.formula1.com/en/latest.html">writing articles</a> and <a href="https://twitter.com/ScarbsTech/status/1588504347247140865">long threads</a> about anything <a href="https://twitter.com/ScarbsTech/status/1575032718282268672">tangentially</a> <a href="https://twitter.com/ScarbsTech/status/1574714953877311488">related</a> <a href="https://twitter.com/ScarbsTech/status/1562838314054324224">to performance</a>.</p>
+      <p>There is a lot of great data made available by F1 which can provide great insights into car dynamics and driver performance.  This is mainly available through the gem that is the <a href="http://ergast.com/mrd/">Ergast API</a> and the <a href="https://github.com/theOehrly/Fast-F1">FastF1 module</a> for Python.  I have used this API in the past to have some fun with the data and I will likely continue in the future but for the best analysis of this specific data I can point to <a href="https://twitter.com/F1DataAnalysis">F1 Data Analysis</a> who makes great visualizations and insights.</p>
+
+      <h2 class="proj">Goal</h2>
+      <hr class="fade-left">
+      <p>Despite the high quality(but tragically low frequency) telemetry data being provided by F1, the focus of this project is to try out some semantic image segmentation transfer learning to identify a leading F1 car from the perspective of the onboard camera installed on all F1 cars.</p>
+
+      <div>
+        <img style='display: inline; max-width: 49.3%' src="/projects/f1_seg/assets/rear_perspective.png" alt="Rear Onboard Perspective">
+        <img style='display: inline; max-width: 49.3%' src="/projects/f1_seg/assets/front_perspective.jpg" alt="Front Onboard Perspective">
+      </div>
+
+      <p><a href="https://en.wikipedia.org/wiki/Image_segmentation#Classes_of_segmentation_techniques">Semantic image segmentation</a> can be summarized as classifying every pixel of an image to one of the known classes.  <a href="https://en.wikipedia.org/wiki/Transfer_learning">Transfer learning</a> is the machine learning concept of training a neural network on a certain task and then repurposing the model and training it on a new task.  This is often applied when creating a large, complex model for a domain with a small training set.  This is the situation that I find myself in as semantic image segmentation is a very complex problem and I have to construct the training set myself.  I will spare any further explanation of these topics as there are great articles and courses that provide a lot more insight than I can.</p>
+
+      <p>TODO: Potentially link to further resources above.</p>
+
+      <h2 class="proj">Dataset Creation</h2>
+      <hr class="fade-left">
+      <p>Unsurprisingly I could not find any datasets for my exact case of identifying F1 cars in an image so I had to create it myself.  I downloaded a couple of videos from the <a href="https://www.youtube.com/F1">F1 Youtube channel</a>(great content) and pulled out specific onboard frames that contained a single leading vehicle.  I was able to find ~140 images that contained a variety of teams, tracks, and relative car positions.  </p>
+      <p>The difficult part of the dataset was the manual annotation of the images.  I searched far and wide for an annotation tool and I couldn&#39;t find anything free and usable until I stumbled upon <a href="https://www.cvat.ai">CVAT</a>.  This web app provides a variety of tools and methods for annotating and exporting images.  While the tool helped, the whole process still took hours just to label the handful of images.</p>
+
+      <div>
+        <img style='display: inline; max-width: 49.3%' src="/projects/f1_seg/assets/mask_ex_1.png" alt="Image Mask 1">
+        <img style='display: inline; max-width: 49.3%' src="/projects/f1_seg/assets/mask_ex_2.png" alt="Image Mask 2">
+      </div>
+
+      <h2 class="proj">Model</h2>
+      <hr class="fade-left">
+      <p><a href='https://pytorch.org'>PyTorch</a> is my machine learning library of choice which is convenient as it includes a few built-in models and pre-trained weights.  PyTorch provides a number of models for different applications but the one that I used is <a href="https://arxiv.org/pdf/1512.03385.pdf">ResNet101</a> with weights <a href="https://github.com/pytorch/vision/tree/main/references/classification#resnet">pre-trained</a> on the <a href="https://www.image-net.org">ImageNet</a> dataset.  The model is based on a very interesting <a href="https://en.wikipedia.org/wiki/Residual_neural_network">residual connection architecture</a> while ImageNet is a well known dataset consisting of 14M+ images often used for model training and testing.  </p>
+      <p>The only change I made to the model is the replacement of the final classifer layer from 21 output classes to the 2 output classes that I need.(car and 'not car')  Then I froze the weights of the entire model except for the classifier so that the training will only modify the classifier.  This allows the future training to leverage the feature identification of the original network while adapting the final few layers to solve the specific task of identifying an F1 car in an image.</p>
+
+      <h2 class="proj">Transformations and Training</h2>
+      <hr class="fade-left">
+      <p>Minimal transformations are applied to the input during training and prediction.  I simply normalize the pixel values using values pre-calculated from the training set and there is optional input resizing but performance is affected for smaller image sizes.  I decided not to include any <a href='http://cs231n.stanford.edu/reports/2022/pdfs/57.pdf'>data augmentation</a> like rotation or cropping because all predictions will be made from the same camera angle with the same perspective on the leading car.  The augmentation would provide more samples but in variations that wouldn&#39;t occur in application.</p>
+      <p>Even with the small training dataset it only takes a few epochs for the network to converge on &#39;relatively clean&#39; segmentations.  I have tested a number of different optimizers, learning rates, and transformations with the best combination seeming to be an Adam optimizer with a learning rate varying from 1e-3 to 1e-5 over a few epochs.  I used a batch size of 6 for training as I am somewhat lacking on memory and just loading the model can start to stress my personal system.</p>
+
+      <h2 class="proj">Results</h2>
+      <hr class="fade-left">
+      <p>I am quite pleased with the results, providing a patchy segmentation of the unseen sample images as shown below.  Analyzing more of the masks it is mainly a tyre segmentation model which makes sense as the tyres comprise most of the profile of the car from the level of the onboard camera.  Additionally, the tyres are consistent in colour and shape while the body of the cars can vary in colour and contour depending on the team, resulting in less &#39;confident&#39; segmentation.</p>
+
+      <img src="/projects/f1_seg/assets/process.png" alt="Segmentation Process">
+
+      <p>An entire clip worth of images can be processed by the model and stitched back together with <a href="https://ffmpeg.org">ffmpeg</a> to generate the annotated clips below.</p>
+
+      <img style="margin: auto" src="https://drive.google.com/uc?id=1BdKV4olKv18dzQ7xkiXOl5tLWJxXp42b">
+      <hr class="fade">
+      <img style="margin: auto" src="https://drive.google.com/uc?id=1BhnbVwIesWj_pd4PvAWVsIkQr6rudpxv">
+
+      <p>As a whole this isn&#39;t something that I would put into production as the segmentation is still quite spotty but the segmentation information can be used to create a nice bounding box or other floating tag, potentially combining it with telemetry data to show the identity and speed of the leading car.  If I could speed this up to realtime analysis and sync it with the FastF1 data then this could be a fun continuation of the project.</p>
+
+      <hr class="fade">
+    </div>
+  </body>
+</html>
