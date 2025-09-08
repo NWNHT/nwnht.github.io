@@ -257,7 +257,22 @@
 		}, {
 			"src":	"/photography/photos/0052.jpeg",
 			"alt":	"2023-12-28 - Either Apollo or Artemis on a tree.",
+			"identifier":	52,
+			"caption":	"Apollo or Artemis"
+		}, {
+			"src":	"/photography/photos/0053.jpeg",
+			"alt":	"2022-06-09 - Lacombe Lake Park",
 			"caption":	"",
-			"identifier":	52
+			"identifier":	53
+		}, {
+			"src":	"/photography/photos/0054.jpeg",
+			"alt":	"2024-07-13 - A wedding.  Vernon, BC.",
+			"identifier":	54,
+			"caption":	"Vernon, BC"
+		}, {
+			"src":	"/photography/photos/0055.jpeg",
+			"alt":	"2025-03-23 - Caramel Filled Chocolate Crinkle Cookies",
+			"caption":	"Sugar filled sugar and sugar, with sprinkled sugar.",
+			"identifier":	55
 		}]
 }
