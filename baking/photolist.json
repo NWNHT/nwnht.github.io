@@ -1,0 +1,166 @@
+{
+  "photos": [
+    {
+      "identifier": 1,
+      "caption": "Lemon Squares",
+      "alt": "",
+      "src": "/baking/photos/0001.jpeg"
+    },
+    {
+      "identifier": 2,
+      "caption": "Lemon Loaf",
+      "alt": "",
+      "src": "/baking/photos/0002.jpeg"
+    },
+    {
+      "identifier": 3,
+      "caption": "Blueberry Muffins",
+      "alt": "",
+      "src": "/baking/photos/0003.jpeg"
+    },
+    {
+      "identifier": 4,
+      "caption": "Lemon Butter Cookies",
+      "alt": "",
+      "src": "/baking/photos/0004.jpeg"
+    },
+    {
+      "identifier": 5,
+      "caption": "Oreo Cookies",
+      "alt": "",
+      "src": "/baking/photos/0005.jpeg"
+    },
+    {
+      "identifier": 6,
+      "caption": "Snickerdoodles",
+      "alt": "",
+      "src": "/baking/photos/0006.jpeg"
+    },
+    {
+      "identifier": 7,
+      "caption": "Nanaimo Bars",
+      "alt": "",
+      "src": "/baking/photos/0007.jpeg"
+    },
+    {
+      "identifier": 8,
+      "caption": "Nanaimo Bars",
+      "alt": "",
+      "src": "/baking/photos/0008.jpeg"
+    },
+    {
+      "identifier": 9,
+      "caption": "Lemon Loaf",
+      "alt": "",
+      "src": "/baking/photos/0009.jpeg"
+    },
+    {
+      "identifier": 10,
+      "caption": "Snickerdoodles",
+      "alt": "",
+      "src": "/baking/photos/0010.jpeg"
+    },
+    {
+      "identifier": 11,
+      "caption": "Brownies",
+      "alt": "",
+      "src": "/baking/photos/0011.jpeg"
+    },
+    {
+      "identifier": 12,
+      "caption": "Lemon Meringue Cookies",
+      "alt": "",
+      "src": "/baking/photos/0012.jpeg"
+    },
+    {
+      "identifier": 13,
+      "caption": "Quick Chocolate Drops",
+      "alt": "",
+      "src": "/baking/photos/0013.jpeg"
+    },
+    {
+      "identifier": 14,
+      "caption": "Caramel Filled Chocolate Crinkle Cookies",
+      "alt": "",
+      "src": "/baking/photos/0014.jpeg"
+    },
+    {
+      "identifier": 15,
+      "caption": "Oreo Cookies",
+      "alt": "",
+      "src": "/baking/photos/0015.jpeg"
+    },
+    {
+      "identifier": 16,
+      "caption": "Lofthouse-Style Frosted Sugar Cookies",
+      "alt": "",
+      "src": "/baking/photos/0016.jpeg"
+    },
+    {
+      "identifier": 17,
+      "caption": "Blueberry Muffins",
+      "alt": "",
+      "src": "/baking/photos/0017.jpeg"
+    },
+    {
+      "identifier": 18,
+      "caption": "Apple Danish",
+      "alt": "",
+      "src": "/baking/photos/0018.jpeg"
+    },
+    {
+      "identifier": 19,
+      "caption": "Snicker Doodles",
+      "alt": "",
+      "src": "/baking/photos/0019.jpeg"
+    },
+    {
+      "identifier": 20,
+      "caption": "Chocolate Bark",
+      "alt": "",
+      "src": "/baking/photos/0020.jpeg"
+    },
+    {
+      "identifier": 21,
+      "caption": "Mini-egg Rice Krispie Squares",
+      "alt": "",
+      "src": "/baking/photos/0021.jpeg"
+    },
+    {
+      "identifier": 22,
+      "caption": "Red Velvet Cheesecake Swirl Brownies",
+      "alt": "",
+      "src": "/baking/photos/0022.jpeg"
+    },
+    {
+      "identifier": 23,
+      "caption": "Chocolate Bark",
+      "alt": "",
+      "src": "/baking/photos/0023.jpeg"
+    },
+    {
+      "identifier": 24,
+      "caption": "Almond Roca",
+      "alt": "",
+      "src": "/baking/photos/0024.jpeg"
+    },
+    {
+      "identifier": 25,
+      "caption": "White Chocolate Macadamia Cookies",
+      "alt": "",
+      "src": "/baking/photos/0025.jpeg"
+    },
+    {
+      "identifier": 26,
+      "caption": "Lemon Butter Cookies",
+      "alt": "",
+      "src": "/baking/photos/0026.jpeg"
+    },
+    {
+      "identifier": 27,
+      "caption": "Mini Cheesecakes",
+      "alt": "",
+      "src": "/baking/photos/0027.jpeg"
+    }
+  ]
+}
