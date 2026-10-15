@@ -154,5 +154,30 @@
 			"alt":	"",
 			"caption":	"Pound Cake",
 			"identifier":	31
+		}, {
+			"src":	"/baking/photos/0032.jpeg",
+			"alt":	"",
+			"caption":	"Superior Brownies",
+			"identifier":	32
+		}, {
+			"src":	"/baking/photos/0033.jpeg",
+			"alt":	"",
+			"caption":	"Double Ginger Cookies",
+			"identifier":	33
+		}, {
+			"src":	"/baking/photos/0034.jpeg",
+			"alt":	"",
+			"caption":	"Vibe-Baked Labs Cookies",
+			"identifier":	34
+		}, {
+			"src":	"/baking/photos/0035.jpeg",
+			"alt":	"",
+			"caption":	"Red Velvet Cupcakes",
+			"identifier":	35
+		}, {
+			"src":	"/baking/photos/0036.jpeg",
+			"alt":	"",
+			"caption":	"Linzer Cookies",
+			"identifier":	36
 		}]
 }
