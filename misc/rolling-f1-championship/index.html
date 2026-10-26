@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rolling F1 Championship</title>
+<style>
+  :root {
+    --bg: #faf6ec;          /* light cream */
+    --panel: #fffdf8;
+    --text: #23262c;
+    --muted: #7b8191;
+    --grid: #e7e1d3;
+    --axis: #cfc7b5;
+    --accent: #e10600;
+    --tip-bg: rgba(255,253,248,0.97);
+    --tip-border: #ddd5c4;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                 Helvetica, Arial, sans-serif;
+  }
+  header { padding: 20px 28px 4px; }
+  h1 { margin: 0; font-size: 22px; font-weight: 650; letter-spacing: -0.01em; }
+  h1 span { color: var(--accent); }
+  .sub { margin-top: 4px; font-size: 13px; color: var(--muted); }
+
+  /* Controls */
+  .topbar {
+    display: flex; flex-wrap: wrap; gap: 26px;
+    align-items: flex-end; padding: 16px 28px 6px;
+  }
+  .ctl { display: flex; flex-direction: column; gap: 6px; }
+  .ctl.slider { flex: 1 1 300px; min-width: 260px; }
+  .ctl label {
+    display: flex; justify-content: space-between;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--muted);
+  }
+  .ctl label .val { color: var(--text); font-weight: 650; font-size: 12px; }
+
+  /* Background highlight picker. Exactly one option is active at a time, so
+     the three washes can never stack and fight each other. */
+  .ctl.toggle { flex: 0 0 auto; justify-content: flex-end; padding-bottom: 2px; }
+  .highlight-pick {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px; border-radius: 999px;
+    background: var(--panel); border: 1px solid var(--grid);
+  }
+  .highlight-pick label {
+    display: inline-flex; align-items: center;
+    padding: 5px 12px; border-radius: 999px;
+    font-size: 12px; color: var(--muted);
+    text-transform: none; letter-spacing: 0;
+    cursor: pointer; white-space: nowrap;
+    transition: background .15s, color .15s;
+  }
+  .highlight-pick input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .highlight-pick label:hover { color: var(--text); }
+  .highlight-pick input:checked + span { color: var(--text); font-weight: 650; }
+  .highlight-pick label:has(input:checked) {
+    background: var(--accent);
+    color: #fff;
+  }
+  .highlight-pick input:focus-visible + span {
+    outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px;
+  }
+  .switch {
+    display: inline-flex; align-items: center; gap: 8px;
+    cursor: pointer;
+    font-size: 12px; color: var(--text);
+    text-transform: none; letter-spacing: 0;
+  }
+  .switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .switch .track {
+    width: 40px; height: 22px; border-radius: 11px;
+    background: #ded6c4; position: relative; flex: none;
+    transition: background 0.15s;
+  }
+  .switch .track::after {
+    content: ""; position: absolute; top: 1px; left: 1px;
+    width: 20px; height: 20px;
+    transition: transform 0.15s;
+  }
+  .switch input:checked + .track { background: var(--accent); }
+  .switch input:checked + .track::after { transform: translateX(18px); }
+  .switch input:focus-visible + .track {
+    outline: 2px solid var(--accent); outline-offset: 2px;
+  }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+
+  /* ---------------------------------------------------------------------
+     Pirelli slick tyres as control knobs.
+
+     A real slick reads as concentric bands: a light hub, a coloured
+     sidewall stripe naming the compound, then the dark tread band. At
+     17-18px there is no room for tread grooves, so the compound is carried
+     entirely by those rings.
+
+     --tyre-c is the compound colour: red = soft, yellow = medium,
+     white = hard.
+
+     The gradient is built from --tyre-c in each knob rule rather than once
+     on :root. Defining it on :root would bind var(--tyre-c) to the ROOT
+     value, so per-element compound overrides (#topSlider, #yrMax) would be
+     ignored and every tyre would come out soft red.
+
+     Band stops are tuned for an 18px-diameter render (9px radius), where the
+     compound stripe lands at ~2.3px and the tread at ~2.7px. Narrower bands
+     alias into mush at this size, so they are deliberately wide.
+     --------------------------------------------------------------------- */
+  :root {
+    --tyre-c: #d81a12;                 /* default compound: soft */
+    --tyre-shadow:
+      0 1px 3px rgba(0,0,0,0.35),
+      inset 0 1px 1px rgba(255,255,255,0.25);
+  }
+
+  /* Every tyre-shaped knob: circular, with the slick face built from the
+     knob's own --tyre-c.
+
+     IMPORTANT: the -webkit- and -moz- pseudo-elements MUST NOT share a
+     selector list. A selector list is discarded in its entirety if any one
+     selector in it fails to parse, and Chromium does not recognise
+     ::-moz-range-thumb (nor Firefox ::-webkit-slider-thumb). Mixing them
+     silently drops the whole rule -- which also takes any non-vendor
+     selector in the list down with it (e.g. .switch .track::after). So the
+     engines get separate lists that each parse cleanly. */
+  .switch .track::after,
+  .range-wrap input[type=range]::-webkit-slider-thumb,
+  .ctl.slider input[type=range]::-webkit-slider-thumb {
+    border-radius: 50%;
+    background-color: transparent;
+    box-shadow: var(--tyre-shadow);
+  }
+  .range-wrap input[type=range]::-moz-range-thumb,
+  .ctl.slider input[type=range]::-moz-range-thumb {
+    border-radius: 50%;
+    background-color: transparent;
+    box-shadow: var(--tyre-shadow);
+  }
+  .switch .track::after,
+  .range-wrap input[type=range]::-webkit-slider-thumb,
+  .ctl.slider input[type=range]::-webkit-slider-thumb {
+    background-image: radial-gradient(circle at 50% 50%,
+      #f7f5f1 0 34%,
+      var(--tyre-c) 34% 60%,
+      #2b2b30 60% 92%,
+      #3a3a40 92% 100%);
+  }
+  .range-wrap input[type=range]::-moz-range-thumb,
+  .ctl.slider input[type=range]::-moz-range-thumb {
+    background-image: radial-gradient(circle at 50% 50%,
+      #f7f5f1 0 34%,
+      var(--tyre-c) 34% 60%,
+      #2b2b30 60% 92%,
+      #3a3a40 92% 100%);
+  }
+
+  /* Compound variants, following Pirelli's sidewall convention. The year
+     range gets one of each so its two handles stay tellable apart. */
+  .tyre.soft,   #yrMin,    #nSlider   { --tyre-c: #d81a12; }
+  .tyre.medium, #yrMax,    #topSlider { --tyre-c: #e8b21f; }
+  .tyre.hard                          { --tyre-c: #f2f0ec; }
+
+  /* The two free-standing sliders (window length, top-N) sit on their own
+     native track, so they need a track matching the year range. */
+  .ctl.slider input[type=range] {
+    -webkit-appearance: none; appearance: none;
+    background: transparent; height: 20px; margin: 0;
+  }
+  .ctl.slider input[type=range]::-webkit-slider-runnable-track {
+    height: 5px; border-radius: 3px; background: #e4ddcd;
+  }
+  .ctl.slider input[type=range]::-moz-range-track {
+    height: 5px; border-radius: 3px; background: #e4ddcd;
+  }
+  .ctl.slider input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 27px; height: 27px; border: 0; border-radius: 50%;
+    margin-top: -11px;                     /* centre on the 5px track */
+    cursor: pointer;
+  }
+  .ctl.slider input[type=range]::-moz-range-thumb {
+    width: 27px; height: 27px; border: 0; border-radius: 50%; cursor: pointer;
+  }
+
+  /* Dual-handle year range */
+  .range-wrap { position: relative; height: 26px; padding-top: 8px; }
+  .range-track {
+    position: absolute; left: 0; right: 0; top: 15px; height: 5px;
+    background: #e4ddcd; border-radius: 3px;
+  }
+  .range-fill {
+    position: absolute; top: 15px; height: 5px;
+    background: var(--accent); border-radius: 3px; opacity: 0.85;
+  }
+  .range-wrap input[type=range] {
+    position: absolute; left: 0; width: 100%; top: 6px;
+    -webkit-appearance: none; appearance: none; background: none;
+    pointer-events: none; height: 22px; margin: 0;
+  }
+  .range-wrap input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none; pointer-events: all;
+    width: 27px; height: 27px; border: 0; border-radius: 50%;
+    cursor: pointer;
+  }
+  .range-wrap input[type=range]::-moz-range-thumb {
+    pointer-events: all; width: 27px; height: 27px; border: 0;
+    border-radius: 50%; cursor: pointer;
+  }
+
+  /* Layout: charts on the left, leaderboard sidebar on the right */
+  /* Two columns: charts on the left, leaderboards on the right. Each
+     leaderboard is placed in the same grid row as the chart it describes, so
+     its top lines up with the top of that chart. */
+  .board {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 330px;
+    column-gap: 18px;
+    padding: 10px 28px 0;
+    align-items: start;
+  }
+
+  .cell-drivers-head   { grid-column: 1; grid-row: 1; }
+  .cell-drivers-chart  { grid-column: 1; grid-row: 2; }
+  .cell-drivers-legend { grid-column: 1; grid-row: 3; }
+  .cell-lb-drivers     { grid-column: 2; grid-row: 2; }
+
+  .cell-cons-head      { grid-column: 1; grid-row: 4; }
+  .cell-cons-chart     { grid-column: 1; grid-row: 5; }
+  .cell-cons-legend    { grid-column: 1; grid-row: 6; }
+  .cell-lb-cons        { grid-column: 2; grid-row: 5; }
+
+  @media (max-width: 1080px) {
+    .board { grid-template-columns: minmax(0, 1fr); }
+    .cell-drivers-head, .cell-drivers-chart, .cell-drivers-legend,
+    .cell-lb-drivers, .cell-cons-head, .cell-cons-chart,
+    .cell-cons-legend, .cell-lb-cons { grid-column: 1; }
+    .cell-drivers-head   { grid-row: 1; }
+    .cell-drivers-chart  { grid-row: 2; }
+    .cell-lb-drivers     { grid-row: 3; }
+    .cell-drivers-legend { grid-row: 4; }
+    .cell-cons-head      { grid-row: 5; }
+    .cell-cons-chart     { grid-row: 6; }
+    .cell-lb-cons        { grid-row: 7; }
+    .cell-cons-legend    { grid-row: 8; }
+  }
+
+  .section h2 {
+    margin: 10px 0 2px; font-size: 15px; font-weight: 650;
+    letter-spacing: -0.01em;
+  }
+  .section .hint { font-size: 12px; color: var(--muted); min-height: 16px; }
+
+  .chart { position: relative; width: 100%; height: 460px; }
+  svg { display: block; width: 100%; height: 100%; }
+
+  .grid line { stroke: var(--grid); shape-rendering: crispEdges; }
+  .axis text { font-size: 11px; fill: var(--muted); }
+  .axis path, .axis line { stroke: var(--axis); }
+  .axis-title { font-size: 12px; fill: var(--muted); }
+
+  .season-band { fill: #f7f2e8; }
+  .season-band.alt { fill: #fcf9f2; }
+
+  /* Leader tint: background bands coloured by whoever led the rolling
+     standings at that weekend. Kept translucent so the lines stay legible
+     on top of their own colour. */
+  .leader-band { stroke: none; }
+
+  .line { fill: none; stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; }
+  .line.dim { opacity: 0.144; stroke-width: 1.1; }
+  .line.hot { opacity: 1; stroke-width: 2.8; }
+  .line.max { stroke: #23262c; stroke-width: 2; stroke-dasharray: 6 4; opacity: 0.75; }
+
+  .hover-line { stroke: var(--muted); stroke-dasharray: 3 3; opacity: 0.7; }
+  .dot { stroke: var(--bg); stroke-width: 1.5; }
+
+  .tip {
+    position: absolute; pointer-events: none;
+    background: var(--tip-bg); border: 1px solid var(--tip-border);
+    border-radius: 8px; padding: 8px 10px; font-size: 12px; line-height: 1.45;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12); max-width: 240px;
+    opacity: 0; transition: opacity 0.12s; z-index: 20;
+  }
+  .tip .t-date { color: var(--muted); margin-bottom: 4px; }
+  .tip .t-date strong { color: var(--text); font-weight: 650; }
+
+  .legend {
+    display: grid; gap: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(158px, 1fr));
+    padding: 12px 0 18px;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 8px; min-width: 0;
+    padding: 7px 11px; border-radius: 999px;
+    border: 1px solid var(--grid); background: var(--panel);
+    font-size: 12.5px; color: var(--text);
+    cursor: pointer;
+    transition: background .15s, border-color .15s, transform .12s,
+                opacity .15s;
+  }
+  .legend-item:hover {
+    transform: translateY(-1px); border-color: #d9d0bd;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+  .legend-item:active { transform: translateY(0); }
+  /* Fixed-size swatch so the stroke always sits level with the label. */
+  .legend-item .sw {
+    flex: 0 0 auto; display: block;
+    width: 18px; height: 8px; overflow: visible;
+  }
+  .legend-item .sw line { stroke-width: 2.5; }
+  .legend-item .lb-name {
+    display: block; line-height: 1.1;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  /* Hidden entries dim and strike through, keeping their place in the grid. */
+  .legend-item:not(.active) {
+    opacity: .42; background: transparent;
+    border-style: dashed;
+  }
+  .legend-item:not(.active) .lb-name { text-decoration: line-through; }
+
+  /* Leaderboard */
+  .lb {
+    background: var(--panel); border: 1px solid var(--grid);
+    border-radius: 10px; padding: 12px 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .lb h3 {
+    margin: 0 0 2px; font-size: 13px; font-weight: 650;
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .lb h3 .when { font-size: 11px; color: var(--muted); font-weight: 500; }
+  .lb .context {
+    font-size: 11px; color: var(--muted); margin-bottom: 8px;
+  }
+  .lb table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .lb td { padding: 3px 0; vertical-align: middle; }
+  .lb td.pos { width: 20px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .lb td.sw-cell { width: 14px; }
+  .lb .sw { display: block; width: 10px; height: 10px; border-radius: 2px; }
+  .lb td.pts {
+    text-align: right; font-variant-numeric: tabular-nums; font-weight: 600;
+    width: 54px;
+  }
+  .lb tr.top1 td { color: var(--accent); }
+
+  .empty {
+    display: flex; align-items: center; justify-content: center;
+    height: 100%; color: var(--muted); font-size: 15px; text-align: center;
+    padding: 0 40px;
+  }
+  .footer { padding: 16px 28px 28px; font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Rolling <span>F1</span> Championship</h1>
+  <div class="sub" id="subtitle">Loading data…</div>
+</header>
+
+<div class="topbar">
+  <div class="ctl slider">
+    <label for="nSlider">
+      <span>Rolling window</span>
+      <span class="val" id="nVal">24 race weekends</span>
+    </label>
+    <input id="nSlider" type="range" min="1" max="80" value="24" step="1">
+  </div>
+  <div class="ctl slider" id="topCtl">
+    <label for="topSlider">
+      <span>Drivers ever in the rolling top</span>
+      <span class="val" id="topVal">top 2 ever</span>
+    </label>
+    <input id="topSlider" type="range" min="1" max="20" value="2" step="1">
+  </div>
+  <div class="ctl" style="flex:1 1 300px; min-width:260px;">
+    <label>
+      <span>Years included</span>
+      <span class="val" id="yrVal">2010 – 2026</span>
+    </label>
+    <div class="range-wrap">
+      <div class="range-track"></div>
+      <div class="range-fill" id="yrFill"></div>
+      <input id="yrMin" type="range" min="2010" max="2026" value="2010" step="1">
+      <input id="yrMax" type="range" min="2010" max="2026" value="2026" step="1">
+    </div>
+  </div>
+  <div class="ctl toggle">
+    <div class="highlight-pick" role="radiogroup" aria-label="Background highlight">
+      <label for="hlNone">
+        <input id="hlNone" type="radio" name="highlight" value="none" checked>
+        <span>None</span>
+      </label>
+      <label for="hlSeason">
+        <input id="hlSeason" type="radio" name="highlight" value="season">
+        <span>Seasons</span>
+      </label>
+      <label for="hlTint">
+        <input id="hlTint" type="radio" name="highlight" value="tint">
+        <span>Leader tint</span>
+      </label>
+      <label for="hlMatch">
+        <input id="hlMatch" type="radio" name="highlight" value="match">
+        <span>Champion match</span>
+      </label>
+    </div>
+  </div>
+</div>
+
+<div class="board">
+  <div class="section cell-drivers-head">
+    <h2>Drivers</h2>
+    <div class="hint" id="driversHint"></div>
+  </div>
+  <div class="chart cell-drivers-chart" id="driversChart"></div>
+  <div class="legend cell-drivers-legend" id="driversLegend"></div>
+
+  <div class="section cell-cons-head">
+    <h2>Constructors</h2>
+    <div class="hint" id="consHint"></div>
+  </div>
+  <div class="chart cell-cons-chart" id="consChart"></div>
+  <div class="legend cell-cons-legend" id="consLegend"></div>
+
+  <aside class="lb cell-lb-drivers">
+    <h3>Drivers <span class="when" id="lbDriversWhen"></span></h3>
+    <div class="context" id="lbDriversCtx"></div>
+    <table id="lbDrivers"></table>
+  </aside>
+
+  <aside class="lb cell-lb-cons">
+    <h3>Constructors <span class="when" id="lbConsWhen"></span></h3>
+    <div class="context" id="lbConsCtx"></div>
+    <table id="lbCons"></table>
+  </aside>
+</div>
+
+<div class="footer">
+  Rolling points over the trailing window. Race, sprint and fastest-lap points
+  (top-10 finishers only) all land on the Grand Prix Sunday. Constructors use
+  continuous team lineage across rebrands. The dashed black line is the maximum
+  points attainable in the window. Data: Jolpica-F1.
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script>
+"use strict";
+
+const TRANSITION_MS = 300;
+const DASHES = ["", "6 3", "2 2", "8 3 2 3", "1 3"];   // line styles
+
+let DATA = null;
+
+const nSlider = document.getElementById("nSlider");
+const nVal = document.getElementById("nVal");
+const topSlider = document.getElementById("topSlider");
+const topVal = document.getElementById("topVal");
+const yrMin = document.getElementById("yrMin");
+const yrMax = document.getElementById("yrMax");
+const yrVal = document.getElementById("yrVal");
+const yrFill = document.getElementById("yrFill");
+// Background highlights are mutually exclusive: exactly one of
+// none / seasons / tint / match is active, so the washes never stack.
+const highlightRadios = Array.from(
+  document.querySelectorAll('input[name="highlight"]'));
+function highlightMode() {
+  const on = highlightRadios.find((r) => r.checked);
+  return on ? on.value : "none";
+}
+const subtitleEl = document.getElementById("subtitle");
+
+// Shared hover state across both charts: the weekend index under the cursor,
+// or null when not hovering.
+let hoverIndex = null;
+
+// ---------------------------------------------------------------------------
+// Load
+// ---------------------------------------------------------------------------
+
+d3.json("weekend_points.json").then((data) => {
+  DATA = data;
+  buildDriverTeam();
+  subtitleEl.textContent =
+    `${data.weekend_count} race weekends · ${data.first_weekend} → ${data.last_weekend} · updated ${data.generated}`;
+
+  const y0 = 2010, y1 = Number(data.last_weekend.slice(0, 4));
+  for (const el of [yrMin, yrMax]) { el.min = y0; el.max = y1; }
+  yrMin.value = y0; yrMax.value = y1;
+  updateYearFill();
+
+  render();
+}).catch((err) => {
+  document.getElementById("driversChart").innerHTML =
+    `<div class="empty">Failed to load data: ${err}</div>`;
+});
+
+// ---------------------------------------------------------------------------
+// Rolling series
+// ---------------------------------------------------------------------------
+
+// Which weekend indices fall inside the chosen year range.
+function weekendRange() {
+  const inYears = [];
+  for (let i = 0; i < DATA.points.length; i++) {
+    const y = Number(DATA.weekend_meta[i].date.slice(0, 4));
+    if (y >= Number(yrMin.value) && y <= Number(yrMax.value)) inYears.push(i);
+  }
+  return inYears;    // ascending, contiguous
+}
+
+// Rolling totals over the *selected* weekends only. `n` counts included
+// weekends, so clipping the year range genuinely changes the computation.
+//
+// Returns:
+//   series   Map(key -> [{i, pts}])   i = absolute weekend index
+//   maxLine  [{i, pts}]  cumulative maximum attainable points over the window
+//   maxPts   largest plotted value (for y-domain)
+//   bestRank Map(key -> best rolling position, 0-based)
+//   range    [firstIdx, lastIdx]
+function rollingSeries(n, mode) {
+  const idx = weekendRange();
+  const range = [idx[0], idx[idx.length - 1]];
+
+  // Per-weekend contribution per entity.
+  const contrib = new Map();
+  for (const w of idx) {
+    for (const row of DATA.points[w]) {
+      const key = (mode === "constructors") ? row[1] : row[0];
+      const pts = row[2] + row[3] + row[4];
+      if (!pts) continue;
+      let m = contrib.get(key);
+      if (!m) { m = new Map(); contrib.set(key, m); }
+      m.set(w, (m.get(w) || 0) + pts);
+    }
+  }
+  const keys = Array.from(contrib.keys());
+  const series = new Map();
+  for (const k of keys) series.set(k, []);
+
+  // Maximum points a single entity could score in a weekend. A race win is 25
+  // and always takes the fastest-lap point when it exists; a sprint adds its
+  // winner's points. Derived from the data itself so the scale changes for
+  // 2021-22 (3) versus 2023+ (8) and the 2019-24 fastest-lap era are respected.
+  const weekendMax = new Map();
+  for (const w of idx) {
+    // Race ceiling, derived from the data rather than assumed: normally 25 for
+    // a win, but Abu Dhabi 2014 awarded double points (50).
+    let raceMax = 0;
+    if (DATA.weekend_meta[w].sprint) {
+      // On a sprint weekend the race and sprint winners can differ, so the
+      // ceiling is the best race score plus the best sprint score.
+      let bestRace = 0, bestSprint = 0;
+      for (const row of DATA.points[w]) {
+        bestRace = Math.max(bestRace, row[2]);
+        bestSprint = Math.max(bestSprint, row[3]);
+      }
+      raceMax = bestRace + bestSprint;
+    } else {
+      for (const row of DATA.points[w]) raceMax = Math.max(raceMax, row[2]);
+    }
+    // Fastest lap adds one point whenever it was actually on offer that
+    // weekend; the race winner can always take it.
+    let flAvailable = false;
+    for (const row of DATA.points[w]) if (row[4] > 0) flAvailable = true;
+    // Halve nothing: 2014's double points are already reflected in row[2].
+    const m = raceMax + (flAvailable ? 1 : 0);
+    weekendMax.set(w, m);
+  }
+
+  const running = new Map();
+  const bestRank = new Map();
+  // Leader of the rolling standings at each weekend index. Only meaningful
+  // once the window is full, but recorded for every step so the caller can
+  // decide how to treat the warm-up period.
+  const leaderAt = new Map();
+  let maxPts = 0;
+  const maxLine = [];
+
+  // Track the max line with its own running window.
+  const maxWindow = [];
+
+  for (let p = 0; p < idx.length; p++) {
+    const i = idx[p];
+
+    for (const k of keys) {
+      const c = contrib.get(k).get(i) || 0;
+      if (c) running.set(k, (running.get(k) || 0) + c);
+    }
+    const dropIdx = p - n;
+    if (dropIdx >= 0) {
+      const d = idx[dropIdx];
+      for (const k of keys) {
+        const c = contrib.get(k).get(d) || 0;
+        if (c) {
+          const v = (running.get(k) || 0) - c;
+          if (v > 0) running.set(k, v); else running.delete(k);
+        }
+      }
+    }
+
+    // A constructor fields two cars, so it can score up to twice the
+    // single-car ceiling in a weekend.
+    maxWindow.push(weekendMax.get(i) * (mode === "constructors" ? 2 : 1));
+    if (maxWindow.length > n) maxWindow.shift();
+    const maxSum = maxWindow.reduce((a, b) => a + b, 0);
+
+    const full = (p + 1) >= n;
+    for (const k of keys) {
+      const v = full ? (running.get(k) || 0) : null;
+      series.get(k).push({ i, pts: v });
+      if (full && v > maxPts) maxPts = v;
+    }
+    maxLine.push({ i, pts: full ? maxSum : null });
+    if (full && maxSum > maxPts) maxPts = maxSum;
+
+    if (full) {
+      const order = Array.from(running.entries()).sort((a, b) => b[1] - a[1]);
+      for (let r = 0; r < order.length; r++) {
+        const k = order[r][0];
+        const m = bestRank.get(k);
+        if (m === undefined || r < m) bestRank.set(k, r);
+      }
+      // Ties keep the earlier-inserted key, matching the sort's stability.
+      if (order.length) leaderAt.set(i, order[0][0]);
+    }
+  }
+
+  return { series, maxLine, maxPts, bestRank, leaderAt, range, idx };
+}
+
+function everTopKeys(R, keys, topN) {
+  return keys.filter((k) => {
+    const m = R.bestRank.get(k);
+    return m !== undefined && m < topN;
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Naming + colour
+// ---------------------------------------------------------------------------
+
+function meta(key, mode) {
+  if (mode === "constructors") {
+    return { name: DATA.teams[key].label, code: DATA.teams[key].label };
+  }
+  const d = DATA.drivers[key];
+  return { name: d.name, code: d.code || d.name.slice(0, 3).toUpperCase() };
+}
+
+const TEAM_COLORS = {
+  ferrari: "#d81a12",
+  mercedes: "#00a99d",
+  red_bull: "#1e41ff",
+  mclaren: "#ff8000",
+  williams: "#1f7fe0",
+  renault_lineage: "#2293d1",
+  force_india_lineage: "#00665e",
+  alphatauri_lineage: "#5f6b7a",
+  sauber_lineage: "#c92d4b",
+  caterham_lineage: "#2e8b57",
+  marussia_lineage: "#b04a5a",
+  haas: "#8d9299",
+  hrt: "#a0a0a0",
+  cadillac: "#b8912a",
+};
+
+// Verdict colours for the leader-match wash. Kept as CSS-variable-free
+// literals because they are applied as SVG fill attributes, not styles.
+const MATCH_COLORS = { ok: "#2f9e5f", bad: "#d64545" };
+
+function fallbackColor(key) {
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) % 360;
+  return d3.hsl(h, 0.55, 0.42).formatHex();
+}
+
+let driverTeam = null;
+function buildDriverTeam() {
+  driverTeam = new Map();
+  const last = {};
+  for (let w = 0; w < DATA.points.length; w++) {
+    for (const row of DATA.points[w]) last[row[0]] = row[1];
+  }
+  for (const [d, t] of Object.entries(last)) driverTeam.set(Number(d), t);
+}
+
+function teamKeyFor(key, mode) {
+  if (mode === "constructors") return DATA.teams[key].key;
+  const tid = driverTeam ? driverTeam.get(key) : null;
+  return tid == null ? null : DATA.teams[tid].key;
+}
+
+// Actual championship leader after each weekend, for the current mode.
+//
+// This is NOT the same thing as the chart's rolling-window leader: the chart
+// asks "who scored most over the last n weekends", while the championship asks
+// "who has most cumulative points this season". The whole point of the
+// leader-match highlight is to show where those two disagree.
+//
+// Points reset between seasons, so the running total is cleared whenever the
+// season changes. Computed once per mode and cached, since it does not depend
+// on the window size or the visible range.
+let champLeaderCache = new Map();
+function championshipLeaderAt(mode) {
+  if (champLeaderCache.has(mode)) return champLeaderCache.get(mode);
+
+  const out = new Map();
+  const running = new Map();
+  let season = null;
+
+  for (let w = 0; w < DATA.weekend_meta.length; w++) {
+    const m = DATA.weekend_meta[w];
+    if (m.season !== season) {
+      season = m.season;
+      running.clear();
+    }
+    for (const row of DATA.points[w]) {
+      const key = (mode === "drivers") ? row[0] : row[1];
+      running.set(key, (running.get(key) || 0) + row[2]);
+    }
+    // Highest points wins; the lower key breaks ties so the result is stable
+    // across renders rather than depending on Map insertion order.
+    let bestKey = null, bestPts = -Infinity;
+    for (const [k, v] of running) {
+      if (v > bestPts || (v === bestPts && bestKey != null && k < bestKey)) {
+        bestKey = k;
+        bestPts = v;
+      }
+    }
+    if (bestKey != null) out.set(w, bestKey);
+  }
+
+  champLeaderCache.set(mode, out);
+  return out;
+}
+
+function colorFor(key, mode) {
+  const tk = teamKeyFor(key, mode);
+  if (tk == null) return fallbackColor(String(key));
+  return TEAM_COLORS[tk] || fallbackColor(tk);
+}
+
+// A driver's line style encodes their stable identity within a team colour, so
+// teammates sharing a colour remain distinguishable.
+let dashAssign = null;
+function buildDashAssign() {
+  dashAssign = new Map();
+  const byTeam = new Map();
+  const all = [];
+  for (let d = 0; d < DATA.drivers.length; d++) all.push(d);
+  for (const d of all) {
+    const tk = driverTeam ? driverTeam.get(d) : null;
+    const key = tk == null ? "?" : DATA.teams[tk].key;
+    if (!byTeam.has(key)) byTeam.set(key, []);
+    byTeam.get(key).push(d);
+  }
+  for (const [, list] of byTeam) {
+    list.sort((a, b) => a - b);
+    list.forEach((d, i) => dashAssign.set(d, DASHES[i % DASHES.length]));
+  }
+}
+
+function dashFor(key, mode) {
+  if (mode === "constructors") return "";
+  if (!dashAssign) buildDashAssign();
+  return dashAssign.get(key) || "";
+}
+
+// ---------------------------------------------------------------------------
+// Chart
+function makeChart(chartEl, legendEl, hintEl, mode) {
+  const hidden = new Set();
+  let hoverKey = null;
+  let tipEl = null;
+  const M = { top: 14, right: 20, bottom: 36, left: 52 };
+  const state = {};
+
+  function ensureTip() {
+    if (!tipEl) {
+      tipEl = document.createElement("div");
+      tipEl.className = "tip";
+      chartEl.appendChild(tipEl);
+    }
+    return tipEl;
+  }
+
+  // Wikipedia article URL for a weekend. encodeURIComponent handles accented
+  // venue names (Sao Paulo) and the underscores standing in for spaces.
+  function wikiUrlFor(meta) {
+    const title = (meta.season + " " + meta.name).replace(/ /g, "_");
+    return "https://en.wikipedia.org/wiki/" + encodeURIComponent(title);
+  }
+
+  function render(n, topN) {
+    const R = rollingSeries(n, mode);
+    const keys = Array.from(R.series.keys());
+
+    const chosen = (mode === "drivers") ? everTopKeys(R, keys, topN) : keys.slice();
+
+    const finalPts = (k) => {
+      const a = R.series.get(k);
+      for (let i = a.length - 1; i >= 0; i--) if (a[i].pts != null) return a[i].pts;
+      return 0;
+    };
+    chosen.sort((a, b) => finalPts(b) - finalPts(a));
+
+    for (const k of Array.from(hidden)) if (!chosen.includes(k)) hidden.delete(k);
+
+    const shown = chosen.map((k) => ({
+      key: k,
+      meta: meta(k, mode),
+      color: colorFor(k, mode),
+      dash: dashFor(k, mode),
+      series: R.series.get(k),
+      pts: lastValue(R, k),
+    }));
+
+    hintEl.textContent = (mode === "drivers")
+      ? `${shown.length} of ${keys.length} drivers ever in the top ${topN} · window of ${n} · ⌘-click a weekend for its Wikipedia page`
+      : `${shown.length} constructors · window of ${n} · ⌘-click a weekend for its Wikipedia page`;
+
+    draw(shown, n, R);
+    drawLegend(shown);
+    state.R = R;
+    state.shown = shown;
+    state.n = n;
+    return R;
+  }
+
+  function draw(shown, n, R) {
+    const width = chartEl.clientWidth || 900;
+    const height = chartEl.clientHeight || 460;
+    const innerW = width - M.left - M.right;
+    const innerH = height - M.top - M.bottom;
+    state.innerW = innerW;
+    state.innerH = innerH;
+
+    let svg = d3.select(chartEl).select("svg");
+    if (svg.empty()) {
+      chartEl.innerHTML = "";
+      svg = d3.select(chartEl).append("svg")
+        .attr("viewBox", `0 0 ${width} ${height}`)
+        .attr("preserveAspectRatio", "xMidYMid meet");
+      svg.append("g").attr("class", "seasons");
+      svg.append("g").attr("class", "leader-bands");
+      svg.append("g").attr("class", "leader-match");
+      svg.append("g").attr("class", "grid");
+      svg.append("g").attr("class", "plot");
+      svg.append("g").attr("class", "x-axis axis");
+      svg.append("g").attr("class", "y-axis axis");
+      svg.append("text").attr("class", "axis-title x-title");
+      svg.append("text").attr("class", "axis-title y-title");
+      svg.append("rect").attr("class", "hover-line").attr("width", 1);
+      svg.append("g").attr("class", "dots");
+      svg.append("rect").attr("class", "hit").attr("fill", "transparent")
+        .on("mousemove", (ev) => onMove(ev))
+        .on("mouseleave", () => setHover(null))
+        // Command-click (metaKey) while hovering a weekend opens that race's
+        // Wikipedia article in a new tab. This is deliberately on the plot
+        // rather than the tooltip: the tooltip is a plain, non-interactive
+        // label, so it can never swallow the pointer or sit between the
+        // cursor and the thing it describes.
+        // A plain click is left alone -- nothing on the chart navigates.
+        .on("click", (ev) => {
+          if (!ev.metaKey) return;
+          const i = hoverIndex;
+          if (i == null) return;
+          const wm = DATA.weekend_meta[i];
+          if (!wm) return;
+          // Suppress Chrome's own cmd-click behaviour for this event.
+          ev.preventDefault();
+          window.open(wikiUrlFor(wm), "_blank", "noopener,noreferrer");
+        });
+    }
+
+    const plot = svg.select("g.plot");
+    plot.attr("transform", `translate(${M.left},${M.top})`);
+    svg.select(".x-axis").attr("transform", `translate(${M.left},${M.top + innerH})`);
+    svg.select(".y-axis").attr("transform", `translate(${M.left},${M.top})`);
+    svg.select(".x-title")
+      .attr("x", M.left + innerW / 2).attr("y", height - 4)
+      .attr("text-anchor", "middle").text("Year");
+    svg.select(".y-title")
+      .attr("transform", `translate(12,${M.top + innerH / 2}) rotate(-90)`)
+      .attr("text-anchor", "middle").text("Rolling points");
+    svg.select("rect.hit")
+      .attr("x", M.left).attr("y", M.top)
+      .attr("width", innerW).attr("height", innerH);
+    svg.select("rect.hover-line").attr("y", M.top).attr("height", innerH);
+
+    // The x-axis spans the selected year range only. Within a given range it
+    // stays put as the window slider moves, so the axis never shifts
+    // horizontally unless the year range itself changes.
+    const x = d3.scaleLinear()
+      .domain([R.range[0], R.range[1]])
+      .range([0, innerW]);
+    const y = d3.scaleLinear()
+      .domain([0, Math.max(1, R.maxPts)]).nice()
+      .range([innerH, 0]);
+    state.x = x;
+    state.y = y;
+
+    const grid = svg.select("g.grid")
+      .attr("transform", `translate(${M.left},${M.top})`);
+    grid.selectAll("line").remove();
+    for (const t of y.ticks(6)) {
+      grid.append("line").attr("x1", 0).attr("x2", innerW)
+        .attr("y1", y(t)).attr("y2", y(t));
+    }
+
+    drawSeasonBreaks(svg, R, x, innerW, innerH);
+    drawLeaderTint(svg, R, x, innerW, innerH);
+    drawLeaderMatch(svg, R, x, innerW, innerH);
+
+    // One tick per season start within the selected range, so the labels
+    // match the visible span rather than the whole dataset.
+    const loYr = Number(DATA.weekend_meta[R.range[0]].date.slice(0, 4));
+    const hiYr = Number(DATA.weekend_meta[R.range[1]].date.slice(0, 4));
+    const tickVals = [];
+    for (let i = R.range[0]; i <= R.range[1]; i++) {
+      const m = DATA.weekend_meta[i];
+      const yr = Number(m.date.slice(0, 4));
+      if (yr < loYr || yr > hiYr) continue;
+      if (m.round === 1) tickVals.push(i);
+    }
+    // Guarantee the first and last years are labelled even if a season's
+    // round 1 falls outside the clip.
+    const firstInRange = R.idx[0];
+    if (!tickVals.length || tickVals[0] !== firstInRange) tickVals.unshift(firstInRange);
+    const xt = d3.axisBottom(x)
+      .tickValues(tickVals)
+      .tickFormat((i) => String(DATA.weekend_meta[i].season));
+    svg.select(".x-axis").call(xt);
+    svg.select(".y-axis").call(d3.axisLeft(y).ticks(6).tickFormat(d3.format(",")));
+
+    // Clip plotted geometry to the selected year range.
+    const lo = R.range[0], hi = R.range[1];
+    const line = d3.line()
+      .defined((d) => d.pts != null && d.i >= lo && d.i <= hi)
+      .x((d) => x(d.i))
+      .y((d) => y(d.pts));
+
+    const data = shown.map((s) => ({ key: s.key, color: s.color, dash: s.dash, series: s.series }));
+    data.push({ key: "__max__", color: null, dash: "6 4", series: R.maxLine, isMax: true });
+
+    const paths = plot.selectAll("path.line").data(data, (d) => d.key);
+    paths.enter().append("path")
+      .attr("class", "line")
+      .attr("d", (d) => line(d.series))
+      .each(function (d, i) {
+        const sel = d3.select(this);
+        sel.style("stroke", d.isMax ? "#23262c" : d.color);
+        sel.style("stroke-dasharray", d.dash || null);
+        sel.classed("max", !!d.isMax);
+        sel.attr("opacity", 0)
+          .transition().duration(TRANSITION_MS).delay(Math.min(i * 6, 300))
+          .attr("opacity", null);
+      })
+      .merge(paths)
+      .attr("d", (d) => line(d.series))
+      .each(function (d) {
+        if (!d.isMax) d3.select(this).style("stroke", d.color)
+          .style("stroke-dasharray", d.dash || null);
+      });
+    paths.exit().remove();
+    state.paths = paths;
+
+    applyStyles();
+  }
+
+  // Alternating zebra shading per season, so the eye can separate eras
+  // without a hard rule competing with the data.
+  function drawSeasonBreaks(svg, R, x, innerW, innerH) {
+    const g = svg.select("g.seasons")
+      .attr("transform", `translate(${M.left},${M.top})`);
+    g.selectAll("*").remove();
+    if (highlightMode() !== "season") return;
+
+    const lo = R.range[0], hi = R.range[1];
+
+    // Collect the first weekend index of each season present in the range.
+    const starts = [];
+    for (let i = lo; i <= hi; i++) {
+      if (DATA.weekend_meta[i].round === 1) starts.push(i);
+      else if (i === lo) starts.push(i);       // range opens mid-season
+    }
+    if (!starts.length) return;
+
+    // Band k spans season start k to the weekend before start k+1, clipped to
+    // the visible range. Alternating fills give the zebra effect.
+    for (let k = 0; k < starts.length; k++) {
+      const from = Math.max(starts[k], lo);
+      const to = (k + 1 < starts.length) ? starts[k + 1] - 0.5 : hi;
+      if (to <= from) continue;
+      const x0 = x(from), x1 = x(to);
+      g.append("rect")
+        .attr("class", "season-band" + (k % 2 ? " alt" : ""))
+        .attr("x", Math.min(x0, x1))
+        .attr("y", 0)
+        .attr("width", Math.max(0, Math.abs(x1 - x0)))
+        .attr("height", innerH);
+    }
+  }
+
+  // Background tint following the leader of the rolling standings. Each
+  // weekend is coloured by whoever topped the window at that point, and
+  // consecutive weekends with the same leader are merged into one band so
+  // the tint reads as a continuous era rather than per-race stripes.
+  function leaderColorFor(key, mode) {
+    if (key == null) return null;
+    const tk = teamKeyFor(key, mode);
+    if (tk == null) return fallbackColor(String(key));
+    return TEAM_COLORS[tk] || fallbackColor(tk);
+  }
+
+  // Full-height green/red wash: does the chart's rolling leader match the
+  // actual championship leader at that weekend?
+  //
+  // Green means the driver topping this window is also leading the title race,
+  // red means the window flatters someone who is not actually leading.
+  // Runs of consecutive weekends sharing the same verdict are merged into one
+  // band so it reads as an era rather than per-race stripes.
+  //
+  // It covers the full plot height, which is safe because the highlight picker
+  // allows only one background at a time.
+  function drawLeaderMatch(svg, R, x, innerW, innerH) {
+    const g = svg.select("g.leader-match")
+      .attr("transform", `translate(${M.left},${M.top})`);
+    g.selectAll("*").remove();
+    if (highlightMode() !== "match") return;
+
+    const champ = championshipLeaderAt(mode);
+    const lo = R.range[0], hi = R.range[1];
+
+    // The rolling leader is only meaningful once the window has filled, so
+    // weekends before that have no verdict and simply go unpainted.
+    const verdictAt = (i) => {
+      if (!R.leaderAt.has(i)) return null;
+      const cl = champ.get(i);
+      if (cl == null) return null;
+      return R.leaderAt.get(i) === cl;
+    };
+
+    let runStart = null, runVal = null;
+    const flush = (endI) => {
+      if (runVal == null) return;
+      const from = runStart - 0.5, to = endI + 0.5;
+      const x0 = x(from), x1 = x(to);
+      if (x1 <= x0) return;
+      g.append("rect")
+        .attr("class", "match-band")
+        .attr("x", x0)
+        .attr("y", 0)
+        .attr("width", x1 - x0)
+        .attr("height", innerH)
+        .attr("fill", runVal ? MATCH_COLORS.ok : MATCH_COLORS.bad)
+        .attr("fill-opacity", 0.2);
+    };
+
+    for (let i = lo; i <= hi; i++) {
+      const v = verdictAt(i);
+      if (v !== runVal) {
+        flush(i - 1);
+        runStart = i;
+        runVal = v;
+      }
+    }
+    flush(hi);
+  }
+
+  function drawLeaderTint(svg, R, x, innerW, innerH) {
+    const g = svg.select("g.leader-bands")
+      .attr("transform", `translate(${M.left},${M.top})`);
+    g.selectAll("*").remove();
+    if (highlightMode() !== "tint") return;
+
+    const lo = R.range[0], hi = R.range[1];
+
+    // Walk the visible weekends, grouping runs that share a leader. The tick
+    // spacing is one unit per weekend, so a band covering weekends a..b spans
+    // from a-0.5 to b+0.5 to align with the plotted points.
+    let runStart = null, runKey = null;
+    const flush = (endI) => {
+      if (runKey == null) return;
+      const from = runStart - 0.5, to = endI + 0.5;
+      const x0 = x(from), x1 = x(to);
+      if (x1 <= x0) return;
+      g.append("rect")
+        .attr("class", "leader-band")
+        .attr("x", Math.min(x0, x1))
+        .attr("y", 0)
+        .attr("width", Math.max(0, Math.abs(x1 - x0)))
+        .attr("height", innerH)
+        .attr("fill", leaderColorFor(runKey, mode))
+        .attr("fill-opacity", 0.14);
+    };
+
+    for (let i = lo; i <= hi; i++) {
+      const k = R.leaderAt.has(i) ? R.leaderAt.get(i) : null;
+      if (k !== runKey) {
+        flush(i - 1);
+        runStart = i;
+        runKey = k;
+      }
+    }
+    flush(hi);
+  }
+
+  function onMove(ev) {
+    if (!state.x) return;
+    const svg = d3.select(chartEl).select("svg");
+    const [mx] = d3.pointer(ev, svg.node());
+    const px = mx - M.left;
+    if (px < 0 || px > state.innerW) return;
+    const i = Math.round(state.x.invert(px));
+    const R = state.R;
+    if (!R) return;
+    setHover(i >= R.range[0] && i <= R.range[1] ? i : null);
+  }
+
+  function setHover(i) {
+    if (hoverIndex === i) return;
+    hoverIndex = i;
+    syncHover();
+  }
+
+  // Redraw hover-dependent bits (guide line, dots, tooltip) for this chart.
+  function onHoverChange() {
+    const R = state.R;
+    if (!R || !state.x) return;
+    const svg = d3.select(chartEl).select("svg");
+    const guide = svg.select("rect.hover-line");
+    const dots = svg.select("g.dots");
+    const tip = ensureTip();
+
+    if (hoverIndex == null) {
+      guide.attr("display", "none");
+      dots.selectAll("circle").remove();
+      tip.style.opacity = 0;
+      return;
+    }
+
+    const i = hoverIndex;
+    const gx = state.x(i);
+    guide.attr("display", null).attr("x", M.left + gx);
+
+    const shown = state.shown || [];
+    const rows = [];
+    for (const s of shown) {
+      if (hidden.has(s.key)) continue;
+      const p = s.series.find((q) => q.i === i);
+      if (p && p.pts != null) rows.push({ s, p });
+    }
+    rows.sort((a, b) => b.p.pts - a.p.pts);
+    const top = rows.slice(0, 8);
+
+    dots.attr("transform", `translate(${M.left},${M.top})`);
+    const circles = dots.selectAll("circle").data(top, (d) => d.s.key);
+    circles.enter().append("circle")
+      .attr("class", "dot").attr("r", 3.2)
+      .merge(circles)
+      .attr("cx", (d) => state.x(d.p.i))
+      .attr("cy", (d) => state.y(d.p.pts))
+      .attr("fill", (d) => d.s.color);
+    circles.exit().remove();
+
+    const wm = DATA.weekend_meta[i];
+    // The tooltip is a plain, non-interactive label: no pointer events, no
+    // links. Navigation lives on the plot's cmd-click instead, so the tip
+    // can never sit between the cursor and the data it describes.
+    tip.innerHTML =
+      `<div class="t-date"><strong>${wm.name}</strong></div>` +
+      `<div class="t-date">${wm.date}${wm.sprint ? " · sprint" : ""}</div>`;
+    tip.style.opacity = 1;
+
+    const tw = tip.offsetWidth || 200;
+    let left = M.left + gx + 14;
+    if (left + tw > chartEl.clientWidth - 4) left = M.left + gx - tw - 14;
+    tip.style.left = Math.max(4, left) + "px";
+    tip.style.top = (M.top + 8) + "px";
+  }
+
+  function drawLegend(shown) {
+    legendEl.innerHTML = "";
+    for (const s of shown) {
+      const el = document.createElement("div");
+      el.className = "legend-item" + (hidden.has(s.key) ? "" : " active");
+      el.innerHTML =
+        `<svg class="sw" viewBox="0 0 18 8" aria-hidden="true">` +
+        `<line x1="0" y1="4" x2="18" y2="4" stroke="${s.color}" stroke-width="2.5" ` +
+        `stroke-linecap="round" ` +
+        (s.dash ? `stroke-dasharray="${s.dash}" ` : "") + `/></svg>` +
+        `<span class="lb-name">${s.meta.name}</span>`;
+      el.addEventListener("click", () => {
+        if (hidden.has(s.key)) hidden.delete(s.key); else hidden.add(s.key);
+        drawLegend(shown); applyStyles();
+        onHoverChange();
+      });
+      el.addEventListener("mouseenter", () => { hoverKey = s.key; applyStyles(); });
+      el.addEventListener("mouseleave", () => { hoverKey = null; applyStyles(); });
+      legendEl.appendChild(el);
+    }
+  }
+
+  function applyStyles() {
+    const root = d3.select(chartEl);
+    root.selectAll("path.line")
+      .classed("dim", (d) => !d.isMax &&
+        (hidden.has(d.key) || (hoverKey != null && hoverKey !== d.key)))
+      .classed("hot", (d) => !d.isMax && hoverKey === d.key)
+      .attr("display", (d) => (!d.isMax && hidden.has(d.key)) ? "none" : null);
+  }
+
+  // The keys currently drawn (after the top-N rule), so the sidebar can show
+  // exactly the same set as the chart.
+  function shownKeys() {
+    return (state.shown || []).map((s) => s.key).filter((k) => !hidden.has(k));
+  }
+
+  return { render, onHoverChange, applyStyles, shownKeys };
+}
+
+// ---------------------------------------------------------------------------
+// Leaderboards
+// ---------------------------------------------------------------------------
+
+const store = { drivers: null, constructors: null };
+let driversChart = null, consChart = null;
+
+function round1(v) { return Number.isInteger(v) ? v : Math.round(v * 10) / 10; }
+
+function syncHover() {
+  if (driversChart) driversChart.onHoverChange();
+  if (consChart) consChart.onHoverChange();
+  updateLeaderboards();
+}
+
+function lastValue(R, k) {
+  const a = R.series.get(k);
+  for (let i = a.length - 1; i >= 0; i--) if (a[i].pts != null) return a[i].pts;
+  return 0;
+}
+
+// Values for a set of keys at the current end of the window, detailing only
+// those the chart is actually showing.
+function currentStandings(mode) {
+  const R = store[mode];
+  const m = new Map();
+  const keys = chartFor(mode).shownKeys();
+  for (const k of keys) m.set(k, lastValue(R, k));
+  return m;
+}
+
+// Values for a set of keys at a specific weekend, detailing only the keys the
+// chart is showing. An entity absent from that weekend's window is omitted.
+function standingsAt(i, mode) {
+  const R = store[mode];
+  const m = new Map();
+  const keys = chartFor(mode).shownKeys();
+  for (const k of keys) {
+    const p = R.series.get(k) ? R.series.get(k).find((q) => q.i === i) : null;
+    if (p && p.pts != null) m.set(k, p.pts);
+  }
+  return m;
+}
+
+function chartFor(mode) {
+  return mode === "drivers" ? driversChart : consChart;
+}
+
+function renderTable(tableEl, whenEl, ctxEl, mode, values, i) {
+  const rows = Array.from(values.entries())
+    .filter(([, v]) => v > 0)
+    .sort((a, b) => b[1] - a[1]).slice(0, 10);
+  const wm = (i != null) ? DATA.weekend_meta[i] : null;
+  whenEl.textContent = wm ? wm.date : "current";
+  ctxEl.textContent = wm
+    ? `${wm.name}${wm.sprint ? " (sprint)" : ""}`
+    : "latest rolling standings";
+
+  tableEl.innerHTML = rows.map(([k, v], idx) => {
+    const m = meta(k, mode);
+    const c = colorFor(k, mode);
+    return `<tr class="${idx === 0 ? "top1" : ""}">` +
+      `<td class="pos">${idx + 1}</td>` +
+      `<td class="sw-cell"><span class="sw" style="background:${c}"></span></td>` +
+      `<td>${m.name}</td>` +
+      `<td class="pts">${round1(v)}</td></tr>`;
+  }).join("");
+}
+
+function updateLeaderboards() {
+  for (const mode of ["drivers", "constructors"]) {
+    const i = hoverIndex;
+    const values = (i != null) ? standingsAt(i, mode) : currentStandings(mode);
+    const idDrivers = (mode === "drivers");
+    renderTable(
+      document.getElementById(idDrivers ? "lbDrivers" : "lbCons"),
+      document.getElementById(idDrivers ? "lbDriversWhen" : "lbConsWhen"),
+      document.getElementById(idDrivers ? "lbDriversCtx" : "lbConsCtx"),
+      mode, values, i);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Wiring
+// ---------------------------------------------------------------------------
+
+function updateYearFill() {
+  const lo = Number(yrMin.min), hi = Number(yrMax.max);
+  const a = (Number(yrMin.value) - lo) / (hi - lo);
+  const b = (Number(yrMax.value) - lo) / (hi - lo);
+  yrFill.style.left = (a * 100) + "%";
+  yrFill.style.width = ((b - a) * 100) + "%";
+  yrVal.textContent = `${yrMin.value} \u2013 ${yrMax.value}`;
+}
+
+function render() {
+  const n = Number(nSlider.value);
+  const topN = Number(topSlider.value);
+  nVal.textContent = `${n} race weekend${n === 1 ? "" : "s"}`;
+  topVal.textContent = `top ${topN} ever`;
+  updateYearFill();
+
+  store.drivers = driversChart.render(n, topN);
+  store.constructors = consChart.render(n, topN);
+  updateLeaderboards();
+}
+
+let raf = false;
+function schedule() {
+  if (raf) return;
+  raf = true;
+  requestAnimationFrame(() => { raf = false; render(); });
+}
+
+driversChart = makeChart(
+  document.getElementById("driversChart"),
+  document.getElementById("driversLegend"),
+  document.getElementById("driversHint"),
+  "drivers");
+
+consChart = makeChart(
+  document.getElementById("consChart"),
+  document.getElementById("consLegend"),
+  document.getElementById("consHint"),
+  "constructors");
+
+nSlider.addEventListener("input", schedule);
+topSlider.addEventListener("input", schedule);
+
+// The two year handles share a track. Whichever one the user drags "wins",
+// and the other is pushed to stay on the correct side.
+function onYearInput(which) {
+  let lo = Number(yrMin.value);
+  let hi = Number(yrMax.value);
+  if (lo > hi) {
+    if (which === "min") { hi = lo; yrMax.value = String(hi); }
+    else { lo = hi; yrMin.value = String(lo); }
+  }
+  schedule();
+}
+yrMin.addEventListener("input", () => onYearInput("min"));
+yrMax.addEventListener("input", () => onYearInput("max"));
+for (const r of highlightRadios) r.addEventListener("change", schedule);
+
+window.addEventListener("resize", schedule);
+</script>
+</body>
+</html>
