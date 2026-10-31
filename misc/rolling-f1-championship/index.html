@@ -44,9 +44,19 @@
 
   /* Background highlight picker. Exactly one option is active at a time, so
      the three washes can never stack and fight each other. */
-  .ctl.toggle { flex: 0 0 auto; justify-content: flex-end; padding-bottom: 2px; }
+  .ctl.toggle {
+    flex: 0 0 auto; padding-bottom: 2px; max-width: 100%;
+  }
+  /* Caption above the segmented picker. Matches the .ctl label text so the
+     four controls read as one row of labelled inputs. */
+  .hl-note {
+    display: inline-flex; align-items: center;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
+    color: var(--muted); text-transform: uppercase;
+  }
   .highlight-pick {
     display: inline-flex; align-items: center; gap: 6px;
+    flex-wrap: wrap; max-width: 100%;
     padding: 3px; border-radius: 999px;
     background: var(--panel); border: 1px solid var(--grid);
   }
@@ -255,6 +265,54 @@
     letter-spacing: -0.01em;
   }
   .section .hint { font-size: 12px; color: var(--muted); min-height: 16px; }
+  /* Explanatory sentence above each chart. Sits between the heading and the
+     dynamic hint so the hint stays the last line that changes on interaction. */
+  .section .desc {
+    font-size: 12.5px; color: var(--muted); line-height: 1.5;
+    margin: 2px 0 4px; max-width: 68ch;
+  }
+  .section .desc strong { color: var(--text); font-weight: 600; }
+
+  /* Info affordance: an explicit "?" badge rather than a bare title attribute,
+     so the explanation is discoverable and styled like the rest of the page. */
+  .info {
+    position: relative; display: inline-flex; align-items: center;
+    justify-content: center; width: 14px; height: 14px; margin-left: 5px;
+    border-radius: 50%; border: 1px solid var(--axis);
+    background: var(--panel); color: var(--muted);
+    font-size: 9.5px; font-weight: 700; line-height: 1;
+    cursor: help; vertical-align: 1px; user-select: none;
+  }
+  .info:hover, .info:focus-visible {
+    border-color: var(--accent); color: var(--accent); outline: none;
+  }
+
+  /* Shared popup for the info badges. Deliberately not the chart .tip: that
+     one is positioned in chart pixels and owned by the hover code. */
+  .pop {
+    position: fixed; z-index: 60; max-width: 260px;
+    background: var(--tip-bg); border: 1px solid var(--tip-border);
+    border-radius: 8px; padding: 8px 10px;
+    font-size: 12px; line-height: 1.45; color: var(--text);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.14);
+    pointer-events: none;
+    opacity: 0; transition: opacity 0.12s;
+  }
+  .pop[data-show="1"] { opacity: 1; }
+  /* Term labels inside a popup: bold and underlined so the term stands apart
+     from its explanation when scanning a list of options. */
+  .pop b {
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    text-decoration-thickness: 1px;
+    text-decoration-color: var(--axis);
+    /* Each labelled option starts its own line, so a list of them reads as a
+       list. The first label stays inline with any lead-in sentence. */
+    display: block;
+    margin-top: 4px;
+  }
+  .pop b:first-child { display: inline; margin-top: 0; }
 
   .chart { position: relative; width: 100%; height: 460px; }
   svg { display: block; width: 100%; height: 100%; }
@@ -368,21 +426,21 @@
 <div class="topbar">
   <div class="ctl slider">
     <label for="nSlider">
-      <span>Rolling window</span>
+      <span>Rolling window<span class="info" data-tip="How many recent race weekends each point on the chart totals up. A small window shows short bursts of form; a large one approaches the season standing.">?</span></span>
       <span class="val" id="nVal">24 race weekends</span>
     </label>
     <input id="nSlider" type="range" min="1" max="80" value="24" step="1">
   </div>
   <div class="ctl slider" id="topCtl">
     <label for="topSlider">
-      <span>Drivers ever in the rolling top</span>
+      <span>Drivers ever in the rolling top<span class="info" data-tip="How many drivers to plot. A driver is included if they held one of the top N places in the rolling standings at any point in the selected years, so a brief spell at the front keeps them on the chart.">?</span></span>
       <span class="val" id="topVal">top 2 ever</span>
     </label>
     <input id="topSlider" type="range" min="1" max="20" value="2" step="1">
   </div>
   <div class="ctl" style="flex:1 1 300px; min-width:260px;">
     <label>
-      <span>Years included</span>
+      <span>Years included<span class="info" data-tip="Restricts the visible span. The rolling window still looks back past the left edge, so the earliest weekends are full totals rather than starting from zero.">?</span></span>
       <span class="val" id="yrVal">2010 – 2026</span>
     </label>
     <div class="range-wrap">
@@ -393,6 +451,7 @@
     </div>
   </div>
   <div class="ctl toggle">
+    <div class="hl-note">Background highlight<span class="info" data-tip="**None:** plain background. **Seasons:** alternating bands marking each season. **Leader tint:** colours each stretch by whoever led the rolling window at the time. **Champion match:** green where the rolling leader is also the actual championship leader, red where the window flatters someone who is not.">?</span></div>
     <div class="highlight-pick" role="radiogroup" aria-label="Background highlight">
       <label for="hlNone">
         <input id="hlNone" type="radio" name="highlight" value="none" checked>
@@ -416,14 +475,23 @@
 
 <div class="board">
   <div class="section cell-drivers-head">
-    <h2>Drivers</h2>
+    <h2>Drivers<span class="info" data-tip="The dashed black line is the maximum points attainable in the current window — every race, sprint and fastest-lap point on offer. A driver touching it scored everything available; the gap below it is what they left on the table.">?</span></h2>
+    <p class="desc">Each line is one driver's points total over the trailing
+    window of weekends, so a rising line means recent form rather than season
+    standing. <strong>The rolling leader is not necessarily the championship
+    leader</strong> — that disagreement is what the Champion match view
+    highlights.</p>
     <div class="hint" id="driversHint"></div>
   </div>
   <div class="chart cell-drivers-chart" id="driversChart"></div>
   <div class="legend cell-drivers-legend" id="driversLegend"></div>
 
   <div class="section cell-cons-head">
-    <h2>Constructors</h2>
+    <h2>Constructors<span class="info" data-tip="Totals add up to twice a single driver's, because both cars score. Teams keep one identity across rebrands, so a lineage line runs unbroken through a rename or takeover.">?</span></h2>
+    <p class="desc">The same rolling window, totalled per team. Both cars can
+    score in a weekend, so constructor totals run roughly double a single
+    driver's, and <strong>rebrands are treated as one continuous team</strong>
+    rather than starting fresh.</p>
     <div class="hint" id="consHint"></div>
   </div>
   <div class="chart cell-cons-chart" id="consChart"></div>
@@ -846,7 +914,6 @@ function makeChart(chartEl, legendEl, hintEl, mode) {
     if (svg.empty()) {
       chartEl.innerHTML = "";
       svg = d3.select(chartEl).append("svg")
-        .attr("viewBox", `0 0 ${width} ${height}`)
         .attr("preserveAspectRatio", "xMidYMid meet");
       svg.append("g").attr("class", "seasons");
       svg.append("g").attr("class", "leader-bands");
@@ -879,6 +946,13 @@ function makeChart(chartEl, legendEl, hintEl, mode) {
           window.open(wikiUrlFor(wm), "_blank", "noopener,noreferrer");
         });
     }
+
+    // Keep the viewBox pinned to the current CSS pixel size of the container.
+    // The SVG itself is stretched to 100% by CSS, so a stale viewBox would be
+    // letterboxed by preserveAspectRatio and the drawing would stop filling
+    // its rectangle after a resize. Setting it here means one user unit is
+    // always one CSS pixel, so the hit rect and pointer maths stay aligned.
+    svg.attr("viewBox", `0 0 ${width} ${height}`);
 
     const plot = svg.select("g.plot");
     plot.attr("transform", `translate(${M.left},${M.top})`);
@@ -1372,6 +1446,100 @@ yrMax.addEventListener("input", () => onYearInput("max"));
 for (const r of highlightRadios) r.addEventListener("change", schedule);
 
 window.addEventListener("resize", schedule);
+
+// --- Info badges ---------------------------------------------------------
+// One shared popup serves every .info badge. The text lives in data-tip on the
+// element, so adding another badge needs no JS. Handlers are delegated from
+// the document rather than bound per badge, and the popup is placed with fixed
+// coordinates so it is never clipped by an ancestor's overflow.
+const pop = document.createElement("div");
+pop.className = "pop";
+pop.setAttribute("role", "tooltip");
+document.body.appendChild(pop);
+
+let popOwner = null;
+
+function showPop(el) {
+  const text = el.getAttribute("data-tip");
+  if (!text) return;
+  popOwner = el;
+  // Only **bold** markers are interpreted; every other character is inserted
+  // as text. Building nodes rather than assigning innerHTML keeps the tooltip
+  // copy from ever being able to inject markup.
+  //
+  // A marker count that is not even means the copy is malformed. Rather than
+  // letting a stray ** swallow the rest of the tooltip in bold, the string is
+  // shown verbatim so the typo is visible instead of quietly changing meaning.
+  pop.replaceChildren();
+  const parts = text.split("**");
+  const balanced = parts.length % 2 === 1;
+  parts.forEach((part, i) => {
+    if (!part) return;
+    // Odd indices sit between a pair of ** markers, so they are the labels.
+    if (balanced && i % 2 === 1) {
+      const b = document.createElement("b");
+      b.textContent = part;
+      pop.appendChild(b);
+    } else {
+      pop.appendChild(document.createTextNode(part));
+    }
+  });
+  pop.setAttribute("data-show", "1");
+  placePop(el);
+}
+
+function placePop(el) {
+  const r = el.getBoundingClientRect();
+  const pr = pop.getBoundingClientRect();
+  const gap = 8;
+  // Prefer above the badge; flip below when there is not room.
+  let top = r.top - pr.height - gap;
+  if (top < 4) top = r.bottom + gap;
+  // Centre on the badge, then keep the whole popup on screen.
+  let left = r.left + r.width / 2 - pr.width / 2;
+  left = Math.max(8, Math.min(left, window.innerWidth - pr.width - 8));
+  pop.style.left = Math.round(left) + "px";
+  pop.style.top = Math.round(top) + "px";
+}
+
+function hidePop() {
+  popOwner = null;
+  pop.removeAttribute("data-show");
+}
+
+document.addEventListener("mouseover", (ev) => {
+  const el = ev.target.closest && ev.target.closest(".info");
+  if (el) showPop(el);
+});
+document.addEventListener("mouseout", (ev) => {
+  const el = ev.target.closest && ev.target.closest(".info");
+  if (el && el === popOwner) hidePop();
+});
+// Keyboard parity: the badge is focusable so the text is reachable by tab.
+document.addEventListener("focusin", (ev) => {
+  const el = ev.target.closest && ev.target.closest(".info");
+  if (el) showPop(el); else if (popOwner) hidePop();
+});
+document.addEventListener("focusout", () => {
+  if (popOwner) hidePop();
+});
+// Escape dismisses without moving focus, for keyboard users.
+document.addEventListener("keydown", (ev) => {
+  if (ev.key === "Escape" && popOwner) hidePop();
+});
+// A resize reflows the anchors, so re-place rather than leave the popup adrift.
+window.addEventListener("resize", () => {
+  if (popOwner) placePop(popOwner); else hidePop();
+});
+
+// Any badge is inert decoration for pointer users but a focus stop for
+// keyboard users, so give it tabindex and a label for assistive tech.
+for (const el of document.querySelectorAll(".info")) {
+  el.tabIndex = 0;
+  if (!el.getAttribute("aria-label")) {
+    el.setAttribute("aria-label", "More information");
+  }
+}
 </script>
 </body>
 </html>
