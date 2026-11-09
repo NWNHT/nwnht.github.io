@@ -187,8 +187,13 @@ const Wiki = (() => {
    * One batched call for up to 50 entities. Note the deliberate absence
    * of `languages=en`: on wbgetentities that parameter filters labels
    * down to nothing and you silently get labels:{}. Omitting it returns
-   * every language and we read .en ourselves. `sitefilter=enwiki` is
-   * safe and keeps the sitelinks payload small.
+   * every language and we read .en ourselves.
+   *
+   * We deliberately do NOT pass `sitefilter=enwiki` any more. It kept the
+   * payload small, but it also capped `sitelinks` at exactly one entry,
+   * which threw away the best fame signal we have: how many language
+   * editions of Wikipedia know this thing. Sitelinks cost ~2 KB per
+   * entity and buy us `fame()` below for free.
    */
   async function fetchSeeds(qids) {
     if (!qids.length) return {};
@@ -196,9 +201,33 @@ const Wiki = (() => {
       action: 'wbgetentities',
       ids: qids.slice(0, 50).join('|'),
       props: 'claims|sitelinks|labels',
-      sitefilter: 'enwiki',
     }));
     return j.entities || {};
+  }
+
+  /**
+   * fame(entity) -> 0..1
+   *
+   * How many Wikipedia language editions carry this entity, log-scaled to
+   * a fraction of the ~350 that exist. Einstein sits near 320, World War
+   * II near 250, Apollo 11 near 110, a minor 19th-century chemist at 2.
+   *
+   * The log curve is the important part: a linear scale would put almost
+   * every ordinary subject within a rounding error of zero while the
+   * handful of ultra-famous entities flattened everything below them. In
+   * log space the useful range - obscure to well-known - spreads evenly.
+   *
+   * Why sitelinks and not pageviews? Pageviews are near zero for anything
+   * before the 20th century and swing wildly week to week, which is fatal
+   * for exactly the historical subjects this tool is for. Sitelink count
+   * is stable, free, has data going back to antiquity, and is the
+   * standard Wikidata notability proxy.
+   */
+  const FAME_MAX_LANGS = 350;
+  function fame(entity) {
+    if (!entity || !entity.sitelinks) return 0;
+    const n = Object.keys(entity.sitelinks).length;
+    return Math.min(1, Math.log1p(n) / Math.log(FAME_MAX_LANGS));
   }
 
   /**
@@ -529,6 +558,103 @@ const Wiki = (() => {
   }
 
   /**
+   * fameForTitles(titles, lang) -> { [titleLower]: 0..1 }
+   *
+   * Fame for plain Wikipedia search hits, which start out with no Q-id.
+   * Two hops, both cheap and batched: titles -> pageprops Q-ids in one
+   * call, then those Q-ids -> sitelink counts in one more. That is two
+   * requests for a whole result page regardless of how many rows it has.
+   *
+   * This exists because Wikipedia's own sort orders cannot do the job.
+   * `srsort=incoming_links_desc` ignores the query entirely and returns
+   * the globally most-linked articles ("Year", "France", "Germany") for
+   * any search, and there is no pageviews sort. So we keep Wikipedia's
+   * relevance ordering and attach real fame to it afterwards.
+   */
+  async function fameForTitles(titles, lang = 'en') {
+    const clean = [...new Set((titles || []).filter(Boolean))];
+    if (!clean.length) return {};
+
+    const u = new URL(`https://${lang}.wikipedia.org/w/api.php`);
+    u.searchParams.set('action', 'query');
+    u.searchParams.set('format', 'json');
+    u.searchParams.set('origin', '*');
+    u.searchParams.set('titles', clean.slice(0, 50).join('|'));
+    u.searchParams.set('prop', 'pageprops');
+    u.searchParams.set('ppprop', 'wikibase_item');
+
+    let pages = {};
+    try {
+      const j = await getJSON(u.toString());
+      pages = (j.query || {}).pages || {};
+    } catch {
+      return {};
+    }
+
+    const byQid = {};
+    const titleToQid = {};
+    for (const p of Object.values(pages)) {
+      const qid = p.pageprops && p.pageprops.wikibase_item;
+      if (!qid) continue;
+      titleToQid[p.title.toLowerCase()] = qid;
+      byQid[qid] = true;
+    }
+
+    const qids = Object.keys(byQid);
+    if (!qids.length) return {};
+
+    let entities = {};
+    try {
+      entities = await fetchSeeds(qids);
+    } catch {
+      return {};
+    }
+
+    const out = {};
+    for (const [title, qid] of Object.entries(titleToQid)) {
+      const f = fame(entities[qid]);
+      out[title] = { fame: f, qid };
+    }
+    return out;
+  }
+
+  /**
+   * rankByFame(candidates, query, lang) -> candidates, re-ordered by fame
+   *
+   * Fills in `fame` for any candidate that does not have it yet by
+   * batching a lookup over the rows, then sorts. Exact label matches
+   * still win: fame only separates candidates the query matched equally
+   * well, so an exact title is never displaced by a more famous
+   * neighbour that the query does not name.
+   */
+  async function rankByFame(candidates, query, lang = 'en') {
+    const needing = candidates.filter((c) => c.fame == null);
+    if (needing.length) {
+      let table = {};
+      try {
+        table = await fameForTitles(needing.map((c) => c.label), lang);
+      } catch { /* unreachable: rank as if everything were equally obscure */ }
+      for (const c of needing) {
+        const hit = table[(c.label || '').toLowerCase()];
+        if (hit) {
+          c.fame = hit.fame;
+          if (!c.qid && hit.qid) c.qid = hit.qid;
+        }
+        if (c.fame == null) c.fame = 0;
+      }
+    }
+
+    const q = (query || '').trim().toLowerCase();
+    const labelRank = (s) => (s === q ? 0 : s.startsWith(q) ? 1 : 2);
+    return candidates.slice().sort((a, b) => {
+      const ea = labelRank((a.label || '').toLowerCase());
+      const eb = labelRank((b.label || '').toLowerCase());
+      if (ea !== eb) return ea - eb;
+      return (b.fame || 0) - (a.fame || 0);
+    });
+  }
+
+  /**
    * wikiExtract(title) -> { title, extract, url, wikibase_item }
    * REST summary endpoint; also hands us the Wikidata Q-id so we can
    * upgrade a plain Wikipedia hit into structured dates for free.
@@ -634,7 +760,7 @@ const Wiki = (() => {
    * are preferred (structured dates); Wikipedia results are enriched
    * with the Q-id when the article has one.
    */
-  async function search(query, { lang = 'en', signal } = {}) {
+  async function search(query, { lang = 'en', rank = 'relevant', signal } = {}) {
     const [wd, wp] = await Promise.allSettled([
       searchWikidata(query, lang),
       searchWikipedia(query, lang),
@@ -666,15 +792,18 @@ const Wiki = (() => {
     }
     for (const r of wpList) {
       if (usedTitles.has(r.label.toLowerCase())) continue;
+      usedTitles.add(r.label.toLowerCase());
       merged.push(r);
     }
 
-    // Rank: exact-ish label match first, then subject-kind score, then
-    // Wikidata (which carries dates). The label test stays dominant
-    // because typing an exact title means you want that title; the score
-    // only decides between candidates the query matches equally well,
-    // which is exactly where "Roman Empire" the empire should beat
-    // "Roman Empire" the 2016 documentary series.
+    // Rank: exact-ish label match first, then either subject-kind score
+    // (relevant) or raw fame (fame), then Wikidata, which carries dates.
+    //
+    // The label test stays dominant in both modes because typing an exact
+    // title means you want that title. The mode only chooses between
+    // candidates the query matches equally well, which is precisely where
+    // "Roman Empire" the empire should beat "Roman Empire" the 2016
+    // documentary series - on type in relevant mode, on fame in fame mode.
     const q = query.trim().toLowerCase();
     const labelRank = (s) => (s === q ? 0 : s.startsWith(q) ? 1 : 2);
     merged.sort((a, b) => {
@@ -687,7 +816,14 @@ const Wiki = (() => {
       return 0;
     });
 
-    return merged.slice(0, 16);
+    const out = merged.slice(0, 16);
+
+    // Fame mode re-orders the same shortlist using real sitelink counts.
+    // It runs last because it needs a network round trip, and it works on
+    // the already-shortlisted 16 rather than the full merged pool so the
+    // lookup stays two cheap batched requests.
+    if (rank === 'fame') return rankByFame(out, query, lang);
+    return out;
   }
 
   /**
@@ -831,6 +967,9 @@ const Wiki = (() => {
         end,
         isSpan: !!(start && end && end.y !== start.y),
         propLabel: dates.propLabel || null,
+        // Ranked here as well as in `rank`, because the search list orders
+        // rows by this once dates arrive and the entity is already in hand.
+        fame: fame(entity),
       };
     }
     return out;
@@ -902,13 +1041,24 @@ const Wiki = (() => {
     // itself. Only a weak signal, so it only breaks ties.
     if (/\b(19|20)\d{2}\b/.test(desc)) score -= 0.75;
 
+    // Fame, worth up to +4. Deliberately below the +/-6 type test: a
+    // famous documentary must still lose to the obscure thing it
+    // documents, so "the Roman Empire" outranks any film about it no
+    // matter how many languages the film has reached. Above the date
+    // nudges, so between two equally valid subjects the better-known one
+    // wins. The value is attached by previewDates(), or directly from a
+    // ranked search hit.
+    const f = candidate.fame != null ? candidate.fame
+            : (candidate.previewDates && candidate.previewDates.fame);
+    if (f != null) score += 4.0 * f;
+
     return score;
   }
 
   return {
-    search, resolve, searchWikidata, searchWikipedia, wikiExtract,
-    datesFromText, extractDates, claimToInstant, fetchSeeds, bestLabel,
-    previewDates, subjectScore,
+    search, resolve, searchWikidata, searchWikipedia,
+    wikiExtract, datesFromText, extractDates, claimToInstant, fetchSeeds,
+    bestLabel, previewDates, subjectScore, fame, rankByFame, fameForTitles,
     POINT_PROPS, START_PROPS, PROP_LABEL,
     _cache: cache,
   };

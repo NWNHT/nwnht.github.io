@@ -48,6 +48,24 @@
     <div id="results" class="results" role="listbox" hidden></div>
   </div>
 
+  <!-- Ranking mode for the search results.
+
+       "Relevant" is the default and orders by how well the candidate
+       matches, with a nudge toward things that are actually events, eras
+       or people rather than films and games about them.
+
+       "Famous" keeps the same shortlist but orders it by how many
+       Wikipedia languages know each entry, so a vague query surfaces the
+       well-known subjects instead of the obscure ones it matched first.
+       A thin segmented control rather than a checkbox, because the two
+       are alternatives, not an on/off switch. -->
+  <div class="rankmode" role="group" aria-label="Result ranking">
+    <button id="rank-relevant" class="rankmode-btn is-active" type="button"
+            aria-pressed="true" title="Order by how well each result matches">Relevant</button>
+    <button id="rank-fame" class="rankmode-btn" type="button"
+            aria-pressed="false" title="Order by how famous each result is">Famous</button>
+  </div>
+
   <div class="topbar-actions">
     <button id="btn-fit"    class="btn" title="Fit all events (F)">Fit</button>
     <button id="btn-zoom-in"  class="btn icon" title="Zoom in (>)">+</button>

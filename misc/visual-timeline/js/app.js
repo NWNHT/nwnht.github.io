@@ -25,6 +25,8 @@
     btnZoomOut: $('btn-zoom-out'),
     btnClear: $('btn-clear'),
     btnList: $('btn-list'),
+    rankRelevant: $('rank-relevant'),
+    rankFame: $('rank-fame'),
     eventList: $('eventlist'),
     eventListBody: $('eventlist-body'),
     eventListItems: $('eventlist-items'),
@@ -170,6 +172,54 @@
   /* ---- search ------------------------------------------------------ */
 
   let searchSeq = 0;
+
+  /**
+   * How search results are ordered: 'relevant' or 'fame'.
+   *
+   * Kept in memory and mirrored to localStorage so the choice survives a
+   * reload. It is a preference about how the user thinks, not about this
+   * session, and having to re-pick it on every visit would be tedious.
+   */
+  const RANK_KEY = 'timeline.rank';
+  let rankMode = 'relevant';
+  try {
+    const saved = localStorage.getItem(RANK_KEY);
+    if (saved === 'relevant' || saved === 'fame') rankMode = saved;
+  } catch { /* private mode / storage disabled: fall back to the default */ }
+
+  /**
+   * Reflect `rankMode` in the two buttons and, when asked, re-run the
+   * current query. The active half is marked with `is-active` plus
+   * `aria-pressed`, so the state is exposed to screen readers as well as
+   * drawn on screen.
+   */
+  function applyRankMode({ rerun = true } = {}) {
+    const fame = rankMode === 'fame';
+    els.rankRelevant.classList.toggle('is-active', !fame);
+    els.rankFame.classList.toggle('is-active', fame);
+    els.rankRelevant.setAttribute('aria-pressed', String(!fame));
+    els.rankFame.setAttribute('aria-pressed', String(fame));
+    try { localStorage.setItem(RANK_KEY, rankMode); } catch { /* ignore */ }
+    if (rerun && els.search.value.trim()) runSearch(els.search.value.trim());
+  }
+
+  // Switching modes re-runs the query immediately when one is typed, so
+  // the list the user is looking at visibly reorders rather than waiting
+  // for the next keystroke. Keyboard users get the same behaviour from
+  // Enter/Space on the focused button.
+  els.rankRelevant.addEventListener('click', () => {
+    if (rankMode === 'relevant') return;
+    rankMode = 'relevant';
+    applyRankMode();
+    els.search.focus();
+  });
+  els.rankFame.addEventListener('click', () => {
+    if (rankMode === 'fame') return;
+    rankMode = 'fame';
+    applyRankMode();
+    els.search.focus();
+  });
+
   let debounceTimer = null;
 
   els.search.addEventListener('input', () => {
@@ -206,10 +256,10 @@
 
   async function runSearch(q) {
     const seq = ++searchSeq;
-    showStatus('Searching…');
+    showStatus(rankMode === 'fame' ? 'Searching (by fame)…' : 'Searching…');
     let cands;
     try {
-      cands = await Wiki.search(q);
+      cands = await Wiki.search(q, { rank: rankMode });
     } catch (err) {
       if (seq !== searchSeq) return;
       showMessage(
@@ -297,11 +347,21 @@
    * already-rendered rows into the new order. Keeping the same elements
    * means the appearing date chips do not flicker and any row the user is
    * hovering stays put under the cursor.
+   *
+   * The date lookup is also the first moment `fame` exists for rows that
+   * arrived without it, so it doubles as the trigger for fame ordering.
    */
   function resortRows(cands, rows) {
+    const q = (els.search.value || '').trim().toLowerCase();
+    const labelRank = (s) => (s === q ? 0 : s.startsWith(q) ? 1 : 2);
+    const fame = rankMode === 'fame';
+    const score = (c) => {
+      const f = c.fame != null ? c.fame : (c.previewDates && c.previewDates.fame) || 0;
+      return fame ? f : Wiki.subjectScore(c);
+    };
     const idx = cands
-      .map((c, i) => ({ c, i, s: Wiki.subjectScore(c) }))
-      .sort((a, b) => (b.s - a.s) || (a.i - b.i));
+      .map((c, i) => ({ c, i, lr: labelRank((c.label || '').toLowerCase()), s: score(c) }))
+      .sort((a, b) => (a.lr - b.lr) || (b.s - a.s) || (a.i - b.i));
     const frag = document.createDocumentFragment();
     for (const { i } of idx) if (rows[i]) frag.appendChild(rows[i]);
     els.results.appendChild(frag);
@@ -1134,6 +1194,10 @@
   els.detailClose.addEventListener('click', hideDetail);
 
   /* ---- controls ---------------------------------------------------- */
+
+  // Paint the ranking toggle from the saved preference before anything
+  // else. `rerun: false` because there is no query yet at startup.
+  applyRankMode({ rerun: false });
 
   els.btnFit.addEventListener('click', () => timeline.fit());
 

@@ -216,6 +216,51 @@ body {
 .result-status p { margin: 8px 0; }
 .result-status .muted { color: var(--fg-faint); font-size: 12px; }
 
+/* ---- ranking mode ------------------------------------------------- */
+
+/* Two mutually exclusive states, shown as a joined pair of buttons rather
+   than a checkbox: a checkbox implies "off" is a neutral default, but
+   here both positions are meaningful sorts. Sits inline with the search
+   box in the bar; on narrow screens it is allowed to shrink rather than
+   push the view controls off the edge. */
+.rankmode {
+  display: inline-flex;
+  flex: 0 0 auto;
+  border: 1px solid var(--line-2);
+  border-radius: 9px;
+  overflow: hidden;
+  background: rgba(120, 92, 54, 0.06);
+}
+.rankmode-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--fg-dim);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 6px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.rankmode-btn + .rankmode-btn { border-left: 1px solid var(--line); }
+.rankmode-btn:hover { color: var(--fg); background: rgba(154, 91, 30, 0.10); }
+.rankmode-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+/* The selected half reads as pressed: filled with the accent, so which
+   mode is live is legible at a glance without reading the label. */
+.rankmode-btn.is-active {
+  background: var(--accent);
+  color: #fdf7ec;
+}
+.rankmode-btn.is-active:hover { background: var(--accent); }
+
+@media (max-width: 720px) {
+  /* Below this width the bar is already crowded; the label alone is
+     enough, and the control must not steal room from the search field. */
+  .rankmode-btn { padding: 6px 8px; font-size: 11px; }
+}
+
 .picks { display: flex; flex-direction: column; gap: 4px; margin: 6px 0 10px; }
 .pick {
   display: flex;
