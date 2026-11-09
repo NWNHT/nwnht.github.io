@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Timeline — visualize events and the gaps between them</title>
+<!-- Inline, so there is no extra file to serve and no 404 for the
+     browser's default /favicon.ico request. Matches the brand mark. -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%23f6efe0'/%3E%3Cpath d='M3 12h18' stroke='%239a5b1e' stroke-width='2' fill='none'/%3E%3Ccircle cx='6' cy='12' r='2.5' fill='%239a5b1e'/%3E%3Ccircle cx='13' cy='12' r='2.5' fill='%239a5b1e'/%3E%3Crect x='18' y='8.5' width='4' height='7' rx='1.5' fill='%239a5b1e'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <!-- Sits at the very left, directly above the edge the panel slides
+       from, so the control and the thing it opens share a corner. -->
+  <button id="btn-list" class="btn icon list-btn" title="Show the event list (L)"
+          aria-expanded="false" aria-controls="eventlist">☰</button>
+
+  <!-- Clear sits beside the menu button so the two destructive-ish
+       actions share the top-left corner, away from the view controls on
+       the right. It is armed on the first click and only wipes the
+       timeline on the second, which avoids the browser's blocking
+       confirm() dialog without making the action one accidental click
+       away. -->
+  <button id="btn-clear" class="btn ghost clear-btn" title="Remove all events">
+    Clear
+  </button>
+
+  <div class="brand">
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+      <path d="M3 12h18" stroke="currentColor" stroke-width="2" fill="none"/>
+      <circle cx="6" cy="12" r="2.5" fill="currentColor"/>
+      <circle cx="13" cy="12" r="2.5" fill="currentColor"/>
+      <rect x="18" y="8.5" width="4" height="7" rx="1.5" fill="currentColor"/>
+    </svg>
+    <span>Timeline</span>
+  </div>
+
+  <div class="search-wrap">
+    <input
+      id="search"
+      type="text"
+      autocomplete="off"
+      spellcheck="false"
+      placeholder="Search events or dates…  e.g. “Apollo 11”, “printing press”, “1453”"
+      aria-label="Search events">
+    <div id="results" class="results" role="listbox" hidden></div>
+  </div>
+
+  <div class="topbar-actions">
+    <button id="btn-fit"    class="btn" title="Fit all events (F)">Fit</button>
+    <button id="btn-zoom-in"  class="btn icon" title="Zoom in (>)">+</button>
+    <button id="btn-zoom-out" class="btn icon" title="Zoom out (<)">−</button>
+  </div>
+</header>
+
+<div id="hint" class="hint">
+  <strong>Drag</strong> or swipe to pan · <strong>scroll</strong> up/down to zoom · <strong>shift</strong>+scroll to pan · <strong>click a label</strong> for details
+  <button id="hint-close" class="hint-close" aria-label="Dismiss">×</button>
+</div>
+
+<main id="viewport" class="viewport">
+  <canvas id="canvas"></canvas>
+  <div id="overlay" class="overlay"></div>
+  <div id="tooltip" class="tooltip" hidden></div>
+  <div id="empty" class="empty">
+    <h2>Nothing on the timeline yet</h2>
+    <p>Search above to add events. Try:</p>
+    <div class="seeds">
+      <button class="seed" data-q="Apollo 11">Apollo 11</button>
+      <button class="seed" data-q="World War II">World War II</button>
+      <button class="seed" data-q="Big Bang">Big Bang</button>
+      <button class="seed" data-q="Gutenberg">Printing press</button>
+      <button class="seed" data-q="Moon landing">Moon landing</button>
+      <button class="seed" data-q="Construction of the Colosseum">Colosseum</button>
+    </div>
+  </div>
+</main>
+
+<footer class="statusbar">
+  <div class="status-left">
+    <span id="count">0 events</span>
+    <span class="sep">·</span>
+    <span id="span-info" class="muted">—</span>
+  </div>
+  <div class="status-right">
+    <span class="muted">data: Wikipedia</span>
+  </div>
+</footer>
+
+<div id="detail" class="detail" hidden>
+  <button id="detail-close" class="detail-close" aria-label="Close">×</button>
+  <div id="detail-body"></div>
+</div>
+
+<!--
+  The event list slides in from the left. It is a sibling of the viewport
+  rather than a child so that opening it never disturbs the canvas size:
+  the timeline would otherwise re-layout on every toggle and the view
+  would jump.
+-->
+<aside id="eventlist" class="eventlist" aria-label="Events on the timeline" aria-hidden="true">
+  <div class="eventlist-head">
+    <span class="eventlist-title">Events</span>
+    <span id="eventlist-count" class="eventlist-count">0</span>
+    <button id="eventlist-close" class="eventlist-close" aria-label="Hide event list">×</button>
+  </div>
+
+  <!-- One scroll container for the whole panel. The sets and the events
+       used to scroll independently, which meant two scrollbars fighting
+       for the same strip of space and rows sliding under each other. A
+       single column avoids that: the sets come first, a divider marks
+       where they end, and the events follow. -->
+  <div class="eventlist-body" id="eventlist-body">
+    <details id="setpicker" class="setpicker" open>
+      <summary class="setpicker-summary">
+        <span>Suggested sets</span>
+        <span class="setpicker-hint">click to load</span>
+      </summary>
+      <ul id="setpicker-list" class="setpicker-list"></ul>
+      <div id="setpicker-note" class="setpicker-note" hidden></div>
+    </details>
+
+    <div class="eventlist-divider"><span>Your events</span></div>
+
+    <ol id="eventlist-items" class="eventlist-items"></ol>
+    <div id="eventlist-empty" class="eventlist-empty">
+      Nothing here yet — pick a set above or search to add events.
+    </div>
+  </div>
+</aside>
+<button id="eventlist-scrim" class="eventlist-scrim" tabindex="-1" aria-hidden="true"></button>
+
+<script src="js/time.js"></script>
+<script src="js/wikidata.js"></script>
+<script src="js/store.js"></script>
+<script src="js/sets.js"></script>
+<script src="js/timeline.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

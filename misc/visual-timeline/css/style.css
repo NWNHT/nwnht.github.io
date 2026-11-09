@@ -1,0 +1,1023 @@
+/* ------------------------------------------------------------------
+ * style.css
+ * ------------------------------------------------------------------ */
+
+:root {
+  /* Canvas palette (read by js/timeline.js as --tl-*). */
+  --tl-grid:      rgba(90, 74, 52, 0.20);
+  --tl-gridInk:   rgba(90, 74, 52, 0.62);
+  --tl-railCap:   rgba(90, 74, 52, 0.42);
+  --tl-bracket:   rgba(90, 74, 52, 0.34);
+  --tl-chipBg:    rgba(250, 243, 228, 0.94);
+  --tl-chipInk:   rgba(74, 58, 38, 0.92);
+  --tl-halo:      rgba(248, 240, 224, 0.92);
+  --tl-hotRing:   rgba(60, 44, 26, 0.85);
+
+  /* Ruler tick tiers, coloured by the interval each marker stands for.
+     Century = red, millennium = green, 50-year = green, 250-year = blue,
+     10-year = purple. The 50-year and millennium markers share a hue as
+     specified, so they are separated by lightness instead: millennia run
+     deep and solid, half-centuries a lighter green. All are desaturated
+     so they sit under the events rather than competing with them. */
+  --tl-tick:          rgba(90, 74, 52, 0.38);    /* minor / plain division */
+  --tl-tickInk:       rgba(90, 74, 52, 0.62);
+  --tl-tickDecade:    #7a4f9e;                   /* 10-year  — purple */
+  --tl-tickHalf:      #5f9e63;                   /* 50-year  — green  */
+  --tl-tickCentury:   #b23b30;                   /* century  — red    */
+  --tl-tickQuarter:   #2f7bb5;                   /* 250-year — blue   */
+  --tl-tickMillennium:#2f6b3c;                   /* millennium — green */
+  --tl-tickEpoch:     #8a4a12;                   /* BC/AD boundary — amber */
+  --tl-tickEpochInk:  #6d3a0c;
+  --tl-rulerChip:     rgba(250, 243, 228, 0.94);
+
+  --bg:        #f6efe0;   /* parchment */
+  --bg-2:      #fbf6ea;   /* raised surfaces */
+  --bg-3:      #fffdf7;   /* menus / popovers */
+  --line:      rgba(92, 72, 46, 0.16);
+  --line-2:    rgba(92, 72, 46, 0.28);
+  --fg:        #3b2f20;   /* warm near-black ink */
+  --fg-dim:    rgba(59, 47, 32, 0.72);
+  --fg-faint:  rgba(59, 47, 32, 0.48);
+  --accent:    #9a5b1e;   /* burnt sienna */
+  --accent-2:  #7d5a9c;
+  --radius:    10px;
+  --topbar-h:  60px;
+  --status-h:  34px;
+
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background:
+    radial-gradient(1200px 600px at 15% -10%, rgba(200, 160, 96, 0.16), transparent 60%),
+    radial-gradient(900px 500px at 90% 110%, rgba(170, 140, 190, 0.12), transparent 60%),
+    var(--bg);
+  color: var(--fg);
+  font: 14px/1.5 ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- top bar ------------------------------------------------------ */
+
+.topbar {
+  height: var(--topbar-h);
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(246, 239, 224, 0.88);
+  backdrop-filter: blur(12px);
+  z-index: 30;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+  flex: 0 0 auto;
+}
+.brand svg { color: var(--accent); }
+
+.search-wrap {
+  position: relative;
+  flex: 1 1 auto;
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+#search {
+  width: 100%;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line-2);
+  background: var(--bg-2);
+  color: var(--fg);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+#search::placeholder { color: var(--fg-faint); }
+#search:focus {
+  border-color: rgba(154, 91, 30, 0.62);
+  box-shadow: 0 0 0 3px rgba(154, 91, 30, 0.16);
+}
+
+/* ---- results ------------------------------------------------------ */
+
+.results {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  /* Tall enough to show several results, but deliberately kept clear of
+     the timeline: at 62vh the list reached the ruler and covered the very
+     tags the user was about to click. */
+  max-height: min(46vh, 380px);
+  overflow-y: auto;
+  background: var(--bg-3);
+  border: 1px solid var(--line-2);
+  border-radius: 12px;
+  box-shadow: 0 20px 48px rgba(80, 58, 30, 0.22);
+  padding: 6px;
+  z-index: 40;
+}
+
+.result {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  grid-template-areas: "label dates src" "desc desc desc";
+  gap: 1px 10px;
+  width: 100%;
+  text-align: left;
+  padding: 9px 11px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+}
+.result:hover,
+.result:focus-visible {
+  background: rgba(154, 91, 30, 0.14);
+  outline: none;
+}
+.result.loading { opacity: 0.5; pointer-events: none; }
+.result-label { grid-area: label; font-weight: 600; }
+
+/* The date the row would put on the timeline. Shown before the user
+   commits, so they can tell apart two similarly-named entries and see at
+   a glance whether the result is a point or a range. */
+.result-dates {
+  grid-area: dates;
+  align-self: center;
+  justify-self: end;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--fg-dim);
+  background: rgba(120, 92, 54, 0.08);
+  border-radius: 5px;
+  padding: 2px 7px;
+  white-space: nowrap;
+}
+/* A range spans time, so tint it to match how a span bar reads on the
+   timeline rather than looking like a single date. */
+.result-dates.is-span {
+  color: #1f5f8b;
+  background: rgba(47, 123, 181, 0.12);
+}
+.result-src {
+  grid-area: src;
+  align-self: center;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--fg-faint);
+  border: 1px solid var(--line-2);
+  border-radius: 99px;
+  padding: 1px 7px;
+}
+.result-src.wikidata { color: #8a4f16; border-color: rgba(154, 91, 30, 0.45); }
+.result-src.wikipedia { color: #6b4a86; border-color: rgba(125, 90, 156, 0.45); }
+.result-desc {
+  grid-area: desc;
+  font-size: 12.5px;
+  color: var(--fg-dim);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.result-status {
+  padding: 12px 12px 6px;
+  color: var(--fg-dim);
+  font-size: 13px;
+}
+.result-status strong { color: var(--fg); }
+.result-status p { margin: 8px 0; }
+.result-status .muted { color: var(--fg-faint); font-size: 12px; }
+
+.picks { display: flex; flex-direction: column; gap: 4px; margin: 6px 0 10px; }
+.pick {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  padding: 7px 10px;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  background: rgba(120, 92, 54, 0.05);
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+}
+.pick:hover { background: rgba(154, 91, 30, 0.16); }
+.pick-date { font-weight: 600; font-size: 12.5px; }
+.pick-ctx { font-size: 11.5px; color: var(--fg-faint); }
+
+.manual { display: flex; gap: 6px; margin-bottom: 8px; }
+.manual input {
+  flex: 1;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line-2);
+  background: var(--bg-2);
+  color: var(--fg);
+  font: inherit;
+  outline: none;
+}
+.manual input.bad { border-color: #b3402f; }
+.manual button {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(154, 91, 30, 0.5);
+  background: rgba(154, 91, 30, 0.18);
+  color: var(--fg);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ---- buttons ------------------------------------------------------ */
+
+.topbar-actions { display: flex; gap: 6px; flex: 0 0 auto; }
+
+.btn {
+  height: 32px;
+  padding: 0 11px;
+  border-radius: 8px;
+  border: 1px solid var(--line-2);
+  background: rgba(120, 92, 54, 0.06);
+  color: var(--fg-dim);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.13s, color 0.13s, border-color 0.13s;
+}
+.btn:hover { background: rgba(120, 92, 54, 0.13); color: var(--fg); }
+.btn:active { transform: translateY(1px); }
+.btn.icon { width: 32px; padding: 0; font-size: 16px; line-height: 1; }
+.btn.ghost { background: transparent; }
+.btn.ghost:hover { background: rgba(179, 64, 47, 0.10); color: #8f2f20; border-color: rgba(179, 64, 47, 0.35); }
+
+/* The event-list toggle sits at the far left, above the edge the panel
+   slides from. It is pulled towards that edge and the following gap
+   tightened, so it reads as belonging to the panel rather than as one
+   more item in the row of view controls. */
+.list-btn { flex: 0 0 auto; margin-left: -4px; }
+.list-btn.on {
+  background: rgba(154, 91, 30, 0.16);
+  border-color: rgba(154, 91, 30, 0.42);
+  color: var(--accent);
+}
+
+/* Clear sits between the menu button and the brand. The negative margin
+   on the brand is what used to close the gap after the menu button; now
+   that Clear takes that slot the gap is closed here instead, so the
+   panel-adjacent corner stays tight. */
+.clear-btn { flex: 0 0 auto; }
+.clear-btn + .brand { margin-left: -6px; }
+
+/* Armed for the second, confirming click. It reads as a warning rather
+   than a normal control so it cannot be mistaken for a resting state. */
+.clear-btn.armed {
+  background: rgba(179, 64, 47, 0.14);
+  border-color: rgba(179, 64, 47, 0.5);
+  color: #8f2f20;
+  font-weight: 600;
+}
+.clear-btn.armed:hover {
+  background: rgba(179, 64, 47, 0.22);
+  border-color: rgba(179, 64, 47, 0.62);
+}
+
+/* ---- hint --------------------------------------------------------- */
+
+.hint {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  font-size: 12px;
+  color: var(--fg-dim);
+  background: rgba(154, 91, 30, 0.07);
+  border-bottom: 1px solid var(--line);
+}
+.hint strong { color: var(--fg); font-weight: 600; }
+.hint kbd {
+  font: 11px ui-monospace, Menlo, monospace;
+  padding: 1px 5px;
+  border: 1px solid var(--line-2);
+  border-radius: 4px;
+  background: rgba(120, 92, 54, 0.09);
+}
+.hint-close {
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  color: var(--fg-faint);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.hint-close:hover { color: var(--fg); }
+
+/* ---- viewport ----------------------------------------------------- */
+
+.viewport {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* When the detail sheet is open the viewport gives up only as much space
+   as is genuinely needed, measured against the timeline's own minimum
+   height (--detail-reserve). In a tall window with a few events that is
+   0px, so the timeline does not move at all. */
+body.has-detail .viewport {
+  flex: 0 0 auto;
+  height: max(var(--detail-reserve, 0px), 220px);
+}
+
+/* The event list is an overlay, but leaving it on top of the timeline
+   would hide the first events and the start of the ruler. Shift the
+   viewport across instead, by exactly the panel width, and let the canvas
+   re-layout into the remaining space. The transition matches the panel's
+   own slide so the two move together rather than the canvas snapping. */
+body.list-open .viewport {
+  margin-left: 288px;
+  transition: margin-left 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+body:not(.list-open) .viewport {
+  margin-left: 0;
+  transition: margin-left 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@media (max-width: 720px) {
+  /* On a narrow screen the panel covers most of the width, so squeezing
+     the timeline into what is left would be useless. Let it overlap. */
+  body.list-open .viewport { margin-left: 0; }
+}
+
+#canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  touch-action: none;   /* we handle panning ourselves */
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;  /* only the tags are interactive */
+  overflow: hidden;
+}
+
+/* ---- tags --------------------------------------------------------- */
+
+.tag {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  max-width: 210px;
+  padding: 6px 9px;
+  border-radius: 9px;
+  border: 1px solid var(--line-2);
+  background: rgba(255, 252, 244, 0.94);
+  backdrop-filter: blur(6px);
+  color: var(--fg);
+  text-decoration: none;
+  font: inherit;
+  font-size: 12px;
+  pointer-events: auto;
+  transform-origin: 0 100%;
+  /* The tag sits just above its anchor point. */
+  margin: 0 0 12px 0;
+  translate: 0 -100%;
+  transition: border-color 0.14s, background 0.14s, box-shadow 0.14s;
+  cursor: pointer;
+  will-change: transform;
+}
+
+.tag:hover,
+.tag:focus-visible,
+.tag.is-active {
+  border-color: var(--tag-color, var(--accent));
+  background: rgba(255, 249, 236, 0.99);
+  box-shadow: 0 8px 22px rgba(80, 58, 30, 0.20), 0 0 0 1px var(--tag-color, var(--accent)) inset;
+  outline: none;
+  z-index: 5;
+}
+
+.tag.flip { translate: -100% -100%; }
+
+.tag-dot {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  margin-top: 4px;
+  border-radius: 99px;
+  background: var(--accent);
+}
+
+.tag-body { display: flex; flex-direction: column; min-width: 0; }
+.tag-label {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tag-date {
+  font-size: 11px;
+  color: var(--fg-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* A span tag gets a subtle left accent bar to distinguish it. */
+.tag.is-span { border-left: 3px solid var(--tag-color, var(--accent)); }
+
+@keyframes flash {
+  0%   { box-shadow: 0 0 0 0 var(--tag-color); }
+  40%  { box-shadow: 0 0 0 6px transparent; }
+  70%  { box-shadow: 0 0 0 0 var(--tag-color); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+.tag.flash { animation: flash 0.85s ease-out; }
+
+/* ---- tooltip ------------------------------------------------------ */
+
+.tooltip {
+  position: absolute;
+  z-index: 20;
+  max-width: 300px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line-2);
+  background: rgba(255, 253, 247, 0.97);
+  font-size: 12px;
+  pointer-events: none;
+  box-shadow: 0 12px 30px rgba(80, 58, 30, 0.22);
+}
+.tooltip .t-date { font-weight: 600; }
+.tooltip .t-label { color: var(--fg-dim); }
+
+/* ---- empty state -------------------------------------------------- */
+
+.empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  padding: 24px;
+  pointer-events: none;
+}
+
+/* `hidden` must beat `display: flex`, which it does not by default. This
+   is why the empty state used to keep painting over the timeline after
+   the first event was added. */
+.empty[hidden] { display: none; }
+
+/* The same trap for every panel we toggle with the hidden attribute. */
+.results[hidden],
+.tooltip[hidden],
+.detail[hidden],
+.hint[hidden] { display: none; }
+.empty h2 {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--fg-dim);
+}
+.empty p { margin: 0 0 6px; color: var(--fg-faint); font-size: 13px; }
+.seeds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  justify-content: center;
+  max-width: 520px;
+  pointer-events: auto;
+}
+.seed {
+  padding: 6px 12px;
+  border-radius: 99px;
+  border: 1px solid var(--line-2);
+  background: rgba(120, 92, 54, 0.055);
+  color: var(--fg-dim);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s, border-color 0.14s;
+}
+.seed:hover {
+  background: rgba(154, 91, 30, 0.17);
+  border-color: rgba(154, 91, 30, 0.5);
+  color: var(--fg);
+}
+
+/* ---- status bar --------------------------------------------------- */
+
+.statusbar {
+  height: var(--status-h);
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 14px;
+  border-top: 1px solid var(--line);
+  background: rgba(246, 239, 224, 0.9);
+  font-size: 12px;
+  color: var(--fg-dim);
+  z-index: 20;
+}
+.status-left, .status-right { display: flex; align-items: center; gap: 8px; }
+.sep { color: var(--fg-faint); }
+.muted { color: var(--fg-faint); }
+.toggle { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+.toggle input { accent-color: var(--accent); }
+
+/* ---- detail panel ------------------------------------------------- */
+
+.detail {
+  /* A bottom sheet rather than a right-hand sidebar. The timeline is a
+     horizontal strip, so a sidebar eats the very axis you are reading
+     and covers the tag you just clicked - which made the panel feel like
+     it needed two clicks. Docking it below keeps the ruler visible and
+     reclaims dead space under the rail. */
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: var(--status-h);
+  height: var(--detail-h, auto);
+  max-height: 45vh;
+  background: rgba(255, 253, 247, 0.97);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid var(--line-2);
+  padding: 16px 20px 20px;
+  overflow-y: auto;
+  z-index: 25;
+  box-shadow: 0 -18px 48px rgba(80, 58, 30, 0.18);
+}
+
+/* Two columns when there is room: prose on the left, the date/gap facts
+   on the right, so a wide window doesn't stretch text to unreadable
+   line lengths. */
+@media (min-width: 900px) {
+  .detail-body-cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    gap: 4px 32px;
+    align-items: start;
+  }
+}
+.detail h2 {
+  margin: 0 26px 6px 0;
+  font-size: 17px;
+  font-weight: 650;
+  line-height: 1.3;
+}
+.detail-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid var(--line-2);
+  background: rgba(120, 92, 54, 0.07);
+  color: var(--fg-dim);
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}
+.detail-close:hover { color: var(--fg); background: rgba(120, 92, 54, 0.15); }
+
+.detail-date { font-size: 13.5px; margin-bottom: 4px; }
+.detail-date strong { color: var(--accent); font-weight: 650; }
+.chip {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 99px;
+  border: 1px solid var(--line-2);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fg-faint);
+}
+.detail-dur { font-size: 12.5px; color: var(--fg-dim); margin-bottom: 10px; }
+.detail-desc { color: var(--fg-dim); font-size: 13px; margin: 10px 0 0; }
+.detail-extract {
+  color: var(--fg-dim);
+  font-size: 12.5px;
+  line-height: 1.6;
+  margin: 10px 0 0;
+}
+.detail-ctx {
+  font-size: 12px;
+  font-style: italic;
+  color: var(--fg-faint);
+  border-left: 2px solid var(--line-2);
+  padding-left: 10px;
+  margin: 10px 0 0;
+}
+
+.detail-gaps {
+  margin: 14px 0 0;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.gap-row { display: flex; justify-content: space-between; gap: 10px; font-size: 12.5px; }
+.gap-dir { color: var(--fg-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gap-val { color: var(--accent); font-weight: 600; flex: 0 0 auto; }
+
+.detail-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 16px 0 0;
+  font-size: 13px;
+}
+.detail-links a { color: var(--accent); text-decoration: none; }
+.detail-links a:hover { text-decoration: underline; }
+
+.btn.remove { margin-top: 16px; width: 100%; }
+
+/* ---- event list (left slide-in) ---------------------------------- */
+
+/* The panel is fixed and overlays the timeline instead of taking layout
+   space. Reflowing the canvas on every open/close would re-run the whole
+   axis layout and make the view jump under the user's cursor. */
+.eventlist {
+  position: fixed;
+  top: var(--topbar-h);
+  left: 0;
+  bottom: var(--status-h);
+  width: 288px;
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-3);
+  border-right: 1px solid var(--line-2);
+  box-shadow: 6px 0 26px rgba(70, 52, 30, 0.13);
+  transform: translateX(-100%);
+  transition: transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: transform;
+}
+.eventlist.open { transform: translateX(0); }
+
+/* Hidden from assistive tech and the tab order while slid away. */
+.eventlist[aria-hidden='true'] { visibility: hidden; }
+.eventlist[aria-hidden='false'] { visibility: visible; }
+
+.eventlist-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--line);
+  flex: 0 0 auto;
+}
+.eventlist-title {
+  font-weight: 650;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  flex: 1 1 auto;
+}
+.eventlist-count {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-faint);
+  background: rgba(120, 92, 54, 0.09);
+  border-radius: 99px;
+  padding: 1px 8px;
+}
+.eventlist-close {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--fg-faint);
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+.eventlist-close:hover { background: rgba(120, 92, 54, 0.1); color: var(--fg); }
+
+.eventlist-items {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+}
+
+.eventlist-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas: "dot label remove" "dot date remove";
+  align-items: center;
+  gap: 0 9px;
+  padding: 7px 6px 7px 8px;
+  border-radius: 8px;
+}
+.eventlist-item:hover { background: rgba(120, 92, 54, 0.07); }
+/* Mirrors the event whose detail panel is open, so the list and the panel
+   never disagree about which event is being inspected. */
+.eventlist-item.is-open { background: rgba(154, 91, 30, 0.13); }
+.eventlist-item.is-open .eventlist-label { color: var(--accent); }
+
+.eventlist-dot {
+  grid-area: dot;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: var(--dot, var(--accent));
+  box-shadow: 0 0 0 3px rgba(120, 92, 54, 0.09);
+}
+.eventlist-label {
+  grid-area: label;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg);
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+.eventlist-label:hover { color: var(--accent); text-decoration: underline; }
+
+.eventlist-date {
+  grid-area: date;
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--fg-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eventlist-remove {
+  grid-area: remove;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--fg-faint);
+  font-size: 15px;
+  line-height: 1;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.eventlist-item:hover .eventlist-remove,
+.eventlist-remove:focus-visible { opacity: 1; }
+.eventlist-remove:hover { background: rgba(178, 59, 48, 0.13); color: #b23b30; }
+
+.eventlist-empty {
+  padding: 18px 14px;
+  font-size: 12.5px;
+  color: var(--fg-faint);
+  text-align: center;
+}
+.eventlist-empty[hidden] { display: none; }
+
+/* ---- single scroll container ------------------------------------- */
+
+/* One scroller for the whole panel: sets, divider, then the events. Two
+   independent scrollers each claimed half the remaining height and
+   could show their own scrollbar, so rows appeared to slide under one
+   another. Scrolling this one moves everything together, which is what
+   a single column should do. */
+.eventlist-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Marks where the suggestions end and the user's own events begin. */
+.eventlist-divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 12px 2px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+  flex: 0 0 auto;
+}
+/* The label with a rule filling the remaining width. */
+.eventlist-divider::after {
+  content: '';
+  flex: 1 1 auto;
+  height: 1px;
+  background: var(--line);
+}
+
+/* ---- suggested sets ---------------------------------------------- */
+
+/* Sets sit at the top of the panel. They no longer scroll on their own -
+   the whole panel is one scroll container (see .eventlist-body), so this
+   only provides the heading and the divider beneath it. */
+.setpicker {
+  flex: 0 0 auto;
+}
+
+/* The scrolling body of the picker. `min-height: 0` is what actually
+   lets a flex child shrink below its content size - without it the list
+   refuses to scroll and grows until it overlaps the event list instead. */
+.setpicker-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 6px 8px;
+}
+
+.setpicker-summary {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+  user-select: none;
+  list-style: none;
+}
+.setpicker-summary::-webkit-details-marker { display: none; }
+.setpicker-summary:hover { color: var(--fg); }
+/* Disclosure triangle, rotated by the details open state. */
+.setpicker-summary::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 0;
+  height: 0;
+  border-left: 4.5px solid currentColor;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  transition: transform 140ms ease;
+  align-self: center;
+}
+.setpicker[open] > .setpicker-summary::before { transform: rotate(90deg); }
+.setpicker-hint {
+  margin-left: auto;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+.set-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3px;
+  width: 100%;
+  text-align: left;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+.set-row:hover { background: rgba(120, 92, 54, 0.07); }
+.set-row:hover .set-name { color: var(--accent); }
+.set-row:disabled { cursor: default; opacity: 0.55; }
+
+.set-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg);
+  line-height: 1.25;
+}
+
+/* The range and the count share a line under the name. Tabular figures
+   keep the year columns aligned down the list. */
+.set-meta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--fg-faint);
+  font-variant-numeric: tabular-nums;
+}
+.set-range { white-space: nowrap; }
+.set-count::before {
+  content: '·';
+  margin-right: 7px;
+  opacity: 0.6;
+}
+
+/* Feedback while a set resolves, and the loaded/error state after. */
+.set-row.loading { opacity: 0.6; cursor: progress; }
+.set-row.done .set-name::after {
+  content: ' ✓';
+  color: var(--accent);
+  font-size: 11px;
+}
+.set-row.error .set-name { color: #b23b30; }
+
+.setpicker-note {
+  margin: 0 12px 10px;
+  padding: 7px 9px;
+  border-radius: 7px;
+  font-size: 11.5px;
+  line-height: 1.4;
+  background: rgba(178, 59, 48, 0.1);
+  color: #8a2f26;
+}
+.setpicker-note[hidden] { display: none; }
+
+/* A scrim only exists to catch the dismissal tap; it never dims the
+   timeline, which stays fully readable behind the panel. */
+.eventlist-scrim {
+  position: fixed;
+  inset: var(--topbar-h) 0 var(--status-h) 0;
+  z-index: 44;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: default;
+  display: none;
+}
+.eventlist-scrim.on { display: block; }
+
+/* The scrim exists only to catch a click outside the panel. It must not
+   swallow wheel, trackpad or pointer input, or the timeline underneath
+   becomes unusable while the list is open - you could not zoom or pan
+   until the list was closed. `pointer-events: none` lets every interaction
+   through, and the outside-click dismissal is handled by a document-level
+   listener instead. */
+.eventlist-scrim { pointer-events: none; }
+
+@media (max-width: 720px) {
+  .eventlist { width: min(84vw, 288px); }
+}
+
+/* ---- small screens ------------------------------------------------ */
+
+@media (max-width: 720px) {
+  .brand span { display: none; }
+  .topbar { gap: 8px; padding: 0 10px; }
+  .topbar-actions .btn:not(.icon) { padding: 0 8px; font-size: 12px; }
+  .hint { font-size: 11px; }
+  .detail { max-height: 50vh; }
+  .tag { max-width: 150px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
